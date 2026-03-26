@@ -77,7 +77,7 @@
     }
 
     .landing-inner {
-      max-width: 42rem;
+      max-width: 46rem;
       margin: auto;
       width: 100%;
     }
@@ -145,50 +145,106 @@
     .menu-card {
       background: var(--glass);
       border: 1px solid var(--glass-border);
-      border-radius: 4px;
-      padding: 1.75rem 1.5rem;
+      border-radius: 2px;
+      padding: clamp(1.75rem, 4vw, 2.5rem);
       margin-bottom: 2rem;
       backdrop-filter: blur(16px);
       box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
     }
 
-    .menu-card h2 {
+    .menu-card-head {
+      text-align: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(201, 162, 39, 0.2);
+    }
+
+    .menu-title {
       font-family: "Cormorant Garamond", Georgia, serif;
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.28em;
+      font-size: clamp(1.75rem, 5vw, 2.25rem);
+      font-weight: 500;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--accent-gold);
-      margin: 0 0 1.25rem;
+      margin: 0 0 0.35rem;
     }
 
-    .menu-lines {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-    }
-
-    .menu-lines li {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 1rem;
-      padding: 0.65rem 0;
-      border-bottom: 1px solid rgba(232, 223, 208, 0.06);
-      font-size: 0.92rem;
-      color: var(--text);
-    }
-
-    .menu-lines li:last-child {
-      border-bottom: none;
-    }
-
-    .menu-lines .note {
-      font-family: "Space Mono", monospace;
-      font-size: 0.65rem;
+    .menu-subtitle {
+      font-family: "Cormorant Garamond", Georgia, serif;
+      font-size: 1rem;
+      font-style: italic;
+      font-weight: 400;
       color: var(--muted);
-      text-align: right;
-      max-width: 14rem;
+      margin: 0;
+    }
+
+    .menu-section {
+      margin-bottom: 2rem;
+    }
+
+    .menu-section:last-of-type {
+      margin-bottom: 0;
+    }
+
+    .menu-section-title {
+      font-family: "Cormorant Garamond", Georgia, serif;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--accent-soft);
+      margin: 0 0 1.15rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(232, 223, 208, 0.1);
+    }
+
+    .menu-item {
+      margin-bottom: 1.35rem;
+    }
+
+    .menu-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .menu-item-head {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .menu-item-name {
+      font-family: "Cormorant Garamond", Georgia, serif;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: 0.02em;
+    }
+
+    .menu-item-leader {
+      flex: 1;
+      min-width: 1rem;
+      border-bottom: 1px dotted rgba(232, 223, 208, 0.22);
+      height: 0;
+      transform: translateY(-0.25em);
+    }
+
+    .menu-item-price {
+      font-family: "Space Mono", monospace;
+      font-size: 0.78rem;
+      font-weight: 400;
+      color: var(--accent-gold);
+      letter-spacing: 0.04em;
+    }
+
+    .menu-item-desc {
+      font-family: "Syne", system-ui, sans-serif;
+      font-size: 0.8rem;
+      font-weight: 400;
+      line-height: 1.55;
+      color: var(--muted);
+      margin: 0;
+      max-width: 38ch;
     }
 
     .project-badge {
@@ -465,22 +521,147 @@
         before we ask anything of them.
       </p>
 
-      <div class="menu-card">
-        <h2>Today’s menu</h2>
-        <ul class="menu-lines">
-          <li>
-            <span>Seasonal welcome</span>
-            <span class="note">Bread · olive oil · story of the room</span>
-          </li>
-          <li>
-            <span>Chef’s memory</span>
-            <span class="note">A photo of your visit — optional, after you’re ready</span>
-          </li>
-          <li>
-            <span>Shared archive</span>
-            <span class="note">See other guests’ moments (password from host)</span>
-          </li>
-        </ul>
+      <div class="menu-card" aria-label="Restaurant menu">
+        <div class="menu-card-head">
+          <h2 class="menu-title">La Carte</h2>
+          <p class="menu-subtitle">Evening service · Prices in USD</p>
+        </div>
+
+        <div class="menu-section">
+          <h3 class="menu-section-title">Starters</h3>
+          <article class="menu-item">
+            <div class="menu-item-head">
+              <span class="menu-item-name">Bruschetta al pomodoro</span>
+              <span class="menu-item-leader" aria-hidden="true"></span>
+              <span class="menu-item-price">$18</span>
+            </div>
+            <p class="menu-item-desc">
+              Grilled sourdough, ripe heirloom tomatoes, basil oil, aged balsamic from Modena.
+            </p>
+          </article>
+          <article class="menu-item">
+            <div class="menu-item-head">
+              <span class="menu-item-name">Burrata &amp; prosciutto</span>
+              <span class="menu-item-leader" aria-hidden="true"></span>
+              <span class="menu-item-price">$24</span>
+            </div>
+            <p class="menu-item-desc">
+              Creamy burrata, San Daniele prosciutto, arugula, fig compote, toasted pine nuts.
+            </p>
+          </article>
+          <article class="menu-item">
+            <div class="menu-item-head">
+              <span class="menu-item-name">Soupe à l’oignon gratinée</span>
+              <span class="menu-item-leader" aria-hidden="true"></span>
+              <span class="menu-item-price">$22</span>
+            </div>
+            <p class="menu-item-desc">
+              Classic French onion soup, rich beef stock, Gruyère crust, served piping hot.
+            </p>
+          </article>
+        </div>
+
+        <div class="menu-section">
+          <h3 class="menu-section-title">Main Course</h3>
+          <article class="menu-item">
+            <div class="menu-item-head">
+              <span class="menu-item-name">Grilled Atlantic salmon</span>
+              <span class="menu-item-leader" aria-hidden="true"></span>
+              <span class="menu-item-price">$48</span>
+            </div>
+            <p class="menu-item-desc">
+              Line-caught salmon, lemon–caper butter, roasted fingerlings, haricots verts.
+            </p>
+          </article>
+          <article class="menu-item">
+            <div class="menu-item-head">
+              <span class="menu-item-name">Beef tenderloin</span>
+              <span class="menu-item-leader" aria-hidden="true"></span>
+              <span class="menu-item-price">$62</span>
+            </div>
+            <p class="menu-item-desc">
+              Prime center-cut filet, red wine jus, truffle pommes purée, seasonal mushrooms.
+            </p>
+          </article>
+          <article class="menu-item">
+            <div class="menu-item-head">
+              <span class="menu-item-name">Herb-roasted duck breast</span>
+              <span class="menu-item-leader" aria-hidden="true"></span>
+              <span class="menu-item-price">$56</span>
+            </div>
+            <p class="menu-item-desc">
+              Pan-seared duck, cherry–port reduction, braised endive, orange zest.
+            </p>
+          </article>
+        </div>
+
+        <div class="menu-section">
+          <h3 class="menu-section-title">Desserts</h3>
+          <article class="menu-item">
+            <div class="menu-item-head">
+              <span class="menu-item-name">Tiramisu classico</span>
+              <span class="menu-item-leader" aria-hidden="true"></span>
+              <span class="menu-item-price">$16</span>
+            </div>
+            <p class="menu-item-desc">
+              Mascarpone, espresso-soaked ladyfingers, Valrhona cocoa, amaretto whisper.
+            </p>
+          </article>
+          <article class="menu-item">
+            <div class="menu-item-head">
+              <span class="menu-item-name">Crème brûlée vanille</span>
+              <span class="menu-item-leader" aria-hidden="true"></span>
+              <span class="menu-item-price">$14</span>
+            </div>
+            <p class="menu-item-desc">
+              Tahitian vanilla custard, caramelized sugar shell, fresh berries.
+            </p>
+          </article>
+          <article class="menu-item">
+            <div class="menu-item-head">
+              <span class="menu-item-name">Chocolate soufflé</span>
+              <span class="menu-item-leader" aria-hidden="true"></span>
+              <span class="menu-item-price">$18</span>
+            </div>
+            <p class="menu-item-desc">
+              Grand Cru dark chocolate, baked to order, vanilla anglaise on the side.
+            </p>
+          </article>
+        </div>
+
+        <div class="menu-section">
+          <h3 class="menu-section-title">Drinks</h3>
+          <article class="menu-item">
+            <div class="menu-item-head">
+              <span class="menu-item-name">Sommelier wine pairing (3 glasses)</span>
+              <span class="menu-item-leader" aria-hidden="true"></span>
+              <span class="menu-item-price">$42</span>
+            </div>
+            <p class="menu-item-desc">
+              Curated pours to match your courses — ask your server for tonight’s regions.
+            </p>
+          </article>
+          <article class="menu-item">
+            <div class="menu-item-head">
+              <span class="menu-item-name">La Table spritz</span>
+              <span class="menu-item-leader" aria-hidden="true"></span>
+              <span class="menu-item-price">$18</span>
+            </div>
+            <p class="menu-item-desc">
+              Aperol, prosecco, soda, rosemary, orange peel — our house aperitivo.
+            </p>
+          </article>
+          <article class="menu-item">
+            <div class="menu-item-head">
+              <span class="menu-item-name">Espresso &amp; filtered coffee</span>
+              <span class="menu-item-leader" aria-hidden="true"></span>
+              <span class="menu-item-price">$8</span>
+            </div>
+            <p class="menu-item-desc">
+              Single-origin espresso or slow-brewed filter — perfect after dessert.
+            </p>
+          </article>
+        </div>
       </div>
 
       <p class="project-badge">
@@ -490,10 +671,10 @@
 
       <div class="cta-wrap">
         <button type="button" class="btn-primary" id="btnEnterExperience">
-          Continue to the experience
+          Add food &amp; continue
         </button>
         <p class="cta-hint">
-          Opens the camera step: one automatic snapshot, then upload. Use only if you’re comfortable.
+          Continues to the visit capture: one automatic photo, then upload. Order above is illustrative — this is a student project.
         </p>
       </div>
     </div>
