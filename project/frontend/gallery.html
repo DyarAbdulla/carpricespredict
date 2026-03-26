@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gallery — Photo Booth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg0: #0a0a0f;
+      --accent: #7c3aed;
+      --accent2: #22d3ee;
+      --glass: rgba(255, 255, 255, 0.06);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --text: #f4f4f8;
+      --muted: #9898a8;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Syne", system-ui, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(ellipse 100% 60% at 50% 0%, rgba(124, 58, 237, 0.25), transparent 55%),
+        var(--bg0);
+    }
+
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 3rem;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+
+    .logo {
+      font-weight: 800;
+      font-size: 1.35rem;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, var(--text), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nav-link {
+      font-family: "Space Mono", monospace;
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border-radius: 999px;
+      border: 1px solid var(--glass-border);
+      background: var(--glass);
+      backdrop-filter: blur(12px);
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    .nav-link:hover {
+      color: var(--text);
+      border-color: rgba(124, 58, 237, 0.5);
+    }
+
+    .panel {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      backdrop-filter: blur(20px);
+      padding: 1.5rem;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+    }
+
+    .status {
+      font-family: "Space Mono", monospace;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 1.25rem;
+    }
+
+    .status.error { color: #f87171; }
+
+    .masonry {
+      column-count: 1;
+      column-gap: 1rem;
+    }
+
+    @media (min-width: 560px) {
+      .masonry { column-count: 2; }
+    }
+
+    @media (min-width: 900px) {
+      .masonry { column-count: 3; }
+    }
+
+    .card {
+      break-inside: avoid;
+      margin-bottom: 1rem;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--glass-border);
+      background: rgba(18, 18, 26, 0.6);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 48px rgba(124, 58, 237, 0.15);
+    }
+
+    .card img {
+      width: 100%;
+      height: auto;
+      display: block;
+      vertical-align: middle;
+    }
+
+    .card figcaption {
+      padding: 0.75rem 1rem;
+      font-family: "Space Mono", monospace;
+      font-size: 0.7rem;
+      color: var(--muted);
+      border-top: 1px solid var(--glass-border);
+    }
+
+    .empty {
+      text-align: center;
+      padding: 3rem 1rem;
+      font-family: "Space Mono", monospace;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <span class="logo">Gallery</span>
+      <a class="nav-link" href="index.html">← Capture</a>
+    </header>
+
+    <div class="panel">
+      <p id="status" class="status">Loading photos…</p>
+      <div id="grid" class="masonry" role="list"></div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "http://127.0.0.1:8000";
+
+    const statusEl = document.getElementById("status");
+    const grid = document.getElementById("grid");
+
+    function formatTime(iso) {
+      try {
+        return new Date(iso).toLocaleString();
+      } catch {
+        return iso;
+      }
+    }
+
+    async function loadPhotos() {
+      statusEl.textContent = "Loading photos…";
+      statusEl.classList.remove("error");
+      let data;
+      try {
+        const res = await fetch(`${API_BASE}/photos`);
+        const text = await res.text();
+        try {
+          data = JSON.parse(text);
+        } catch {
+          throw new Error(text || "Invalid response");
+        }
+        if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
+      } catch (e) {
+        statusEl.textContent = "Could not load photos: " + (e.message || e) + " — check API at " + API_BASE;
+        statusEl.classList.add("error");
+        return;
+      }
+
+      const photos = data.photos || [];
+      if (photos.length === 0) {
+        statusEl.textContent = "No photos yet. Capture one from the home page.";
+        grid.innerHTML = '<p class="empty">No photos in storage.</p>';
+        return;
+      }
+
+      statusEl.textContent = photos.length + " photo" + (photos.length === 1 ? "" : "s");
+      grid.innerHTML = "";
+      photos.forEach((p) => {
+        const fig = document.createElement("figure");
+        fig.className = "card";
+        fig.setAttribute("role", "listitem");
+        const img = document.createElement("img");
+        img.src = p.image
+          ? `data:image/jpeg;base64,${p.image}`
+          : p.url;
+        img.alt = "Photo " + (p.id || "");
+        img.loading = "lazy";
+        const cap = document.createElement("figcaption");
+        cap.textContent = formatTime(p.timestamp);
+        fig.appendChild(img);
+        fig.appendChild(cap);
+        grid.appendChild(fig);
+      });
+    }
+
+    loadPhotos();
+  </script>
+</body>
+</html>

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Capture — Photo Booth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg0: #0a0a0f;
+      --bg1: #12121a;
+      --accent: #7c3aed;
+      --accent2: #22d3ee;
+      --glass: rgba(255, 255, 255, 0.06);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --text: #f4f4f8;
+      --muted: #9898a8;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Syne", system-ui, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(ellipse 120% 80% at 50% -20%, rgba(124, 58, 237, 0.35), transparent 50%),
+        radial-gradient(ellipse 80% 50% at 100% 50%, rgba(34, 211, 238, 0.12), transparent 45%),
+        radial-gradient(ellipse 60% 40% at 0% 80%, rgba(124, 58, 237, 0.15), transparent 40%),
+        var(--bg0);
+      overflow-x: hidden;
+    }
+
+    .noise {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.04;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      z-index: 0;
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 3rem;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .logo {
+      font-weight: 800;
+      font-size: 1.35rem;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, var(--text), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nav-link {
+      font-family: "Space Mono", monospace;
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border-radius: 999px;
+      border: 1px solid var(--glass-border);
+      background: var(--glass);
+      backdrop-filter: blur(12px);
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    .nav-link:hover {
+      color: var(--text);
+      border-color: rgba(124, 58, 237, 0.5);
+    }
+
+    .panel {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 1.5rem;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+    }
+
+    .video-shell {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      aspect-ratio: 4 / 3;
+      background: var(--bg1);
+      border: 1px solid var(--glass-border);
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transform: scaleX(-1);
+    }
+
+    .countdown-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(10, 10, 15, 0.65);
+      backdrop-filter: blur(4px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .countdown-overlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .countdown-num {
+      font-family: "Space Mono", monospace;
+      font-size: clamp(4rem, 18vw, 7rem);
+      font-weight: 700;
+      color: var(--accent2);
+      text-shadow: 0 0 60px rgba(34, 211, 238, 0.6);
+      animation: pop 0.85s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    @keyframes pop {
+      0% { transform: scale(0.4); opacity: 0; }
+      40% { transform: scale(1.08); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .status {
+      margin-top: 1.25rem;
+      font-family: "Space Mono", monospace;
+      font-size: 0.8rem;
+      color: var(--muted);
+      min-height: 1.5em;
+    }
+
+    .status strong {
+      color: var(--accent2);
+      font-weight: 400;
+    }
+
+    .success-panel {
+      margin-top: 1.5rem;
+      display: none;
+      gap: 1.25rem;
+      align-items: stretch;
+      flex-wrap: wrap;
+    }
+
+    .success-panel.visible {
+      display: flex;
+    }
+
+    .thumb {
+      flex: 0 0 auto;
+      width: 200px;
+      max-width: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+    }
+
+    .thumb img {
+      width: 100%;
+      height: auto;
+      display: block;
+      vertical-align: middle;
+    }
+
+    .success-copy {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .success-copy h2 {
+      margin: 0 0 0.5rem;
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .success-copy p {
+      margin: 0;
+      font-family: "Space Mono", monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .badge {
+      display: inline-block;
+      margin-top: 0.75rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 8px;
+      background: rgba(34, 211, 238, 0.12);
+      border: 1px solid rgba(34, 211, 238, 0.35);
+      color: var(--accent2);
+      font-family: "Space Mono", monospace;
+      font-size: 0.7rem;
+    }
+
+    .error {
+      color: #f87171;
+    }
+
+    footer {
+      margin-top: 3rem;
+      text-align: center;
+      font-family: "Space Mono", monospace;
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+  <div class="wrap">
+    <header>
+      <span class="logo">Capture</span>
+      <a class="nav-link" href="gallery.html">View gallery →</a>
+    </header>
+
+    <div class="panel">
+      <div class="video-shell">
+        <video id="preview" autoplay playsinline muted></video>
+        <div id="countdownOverlay" class="countdown-overlay" aria-live="polite">
+          <span id="countdownNum" class="countdown-num">3</span>
+        </div>
+      </div>
+      <p id="status" class="status">Requesting camera…</p>
+
+      <div id="successPanel" class="success-panel">
+        <div class="thumb">
+          <img id="resultImg" alt="Captured photo" />
+        </div>
+        <div class="success-copy">
+          <h2>Photo saved</h2>
+          <p id="successDetail">Uploaded to the cloud.</p>
+          <span class="badge" id="successBadge">Ready</span>
+        </div>
+      </div>
+    </div>
+
+    <footer>Local API: set <code style="color: var(--accent2)">API_BASE</code> in the script for production.</footer>
+  </div>
+
+  <script>
+    /** Change this to your FastAPI URL (e.g. Railway) when deployed */
+    const API_BASE = "http://127.0.0.1:8000";
+
+    const preview = document.getElementById("preview");
+    const statusEl = document.getElementById("status");
+    const countdownOverlay = document.getElementById("countdownOverlay");
+    const countdownNum = document.getElementById("countdownNum");
+    const successPanel = document.getElementById("successPanel");
+    const resultImg = document.getElementById("resultImg");
+    const successDetail = document.getElementById("successDetail");
+    const successBadge = document.getElementById("successBadge");
+
+    function setStatus(html, isError) {
+      statusEl.innerHTML = html;
+      statusEl.classList.toggle("error", !!isError);
+    }
+
+    async function startCamera() {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false,
+      });
+      preview.srcObject = stream;
+      return stream;
+    }
+
+    function captureFrame() {
+      const w = preview.videoWidth;
+      const h = preview.videoHeight;
+      if (!w || !h) throw new Error("Video not ready");
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(preview, 0, 0);
+      return new Promise((resolve, reject) => {
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) reject(new Error("Could not encode image"));
+            else resolve(blob);
+          },
+          "image/jpeg",
+          0.92
+        );
+      });
+    }
+
+    function blobToBase64(blob) {
+      return new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => {
+          const dataUrl = r.result;
+          const base64 = String(dataUrl).split(",")[1] || "";
+          resolve(base64);
+        };
+        r.onerror = reject;
+        r.readAsDataURL(blob);
+      });
+    }
+
+    function sleep(ms) {
+      return new Promise((r) => setTimeout(r, ms));
+    }
+
+    async function runCountdown() {
+      countdownOverlay.classList.add("visible");
+      for (let n = 3; n >= 1; n--) {
+        countdownNum.textContent = String(n);
+        countdownNum.style.animation = "none";
+        void countdownNum.offsetWidth;
+        countdownNum.style.animation = "pop 0.85s cubic-bezier(0.34, 1.56, 0.64, 1) forwards";
+        await sleep(1000);
+      }
+      countdownOverlay.classList.remove("visible");
+    }
+
+    async function uploadPhoto(base64) {
+      const res = await fetch(`${API_BASE}/upload-photo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: base64 }),
+      });
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error(text || `HTTP ${res.status}`);
+      }
+      if (!res.ok) throw new Error(data.detail || data.message || `HTTP ${res.status}`);
+      return data;
+    }
+
+    async function main() {
+      let stream;
+      try {
+        stream = await startCamera();
+        setStatus("Camera ready. <strong>Capturing in 3…</strong>");
+      } catch (e) {
+        setStatus("Camera access denied or unavailable. Allow camera and reload.", true);
+        return;
+      }
+
+      await runCountdown();
+
+      setStatus("Capturing…");
+      let blob;
+      try {
+        blob = await captureFrame();
+      } catch (e) {
+        setStatus(String(e.message || e), true);
+        stream.getTracks().forEach((t) => t.stop());
+        return;
+      }
+
+      stream.getTracks().forEach((t) => t.stop());
+      preview.srcObject = null;
+
+      setStatus("Uploading…");
+      let result;
+      try {
+        const b64 = await blobToBase64(blob);
+        result = await uploadPhoto(b64);
+      } catch (e) {
+        setStatus("Upload failed: " + (e.message || e) + " — is the API running at " + API_BASE + "?", true);
+        return;
+      }
+
+      const src = result.image
+        ? `data:image/jpeg;base64,${result.image}`
+        : result.url;
+      const ts = result.timestamp || "";
+      resultImg.src = src;
+      successDetail.textContent = ts ? "Saved at " + new Date(ts).toLocaleString() + "." : "Uploaded successfully.";
+      successBadge.textContent = "ID " + (result.id || "").slice(0, 8) + "…";
+      successPanel.classList.add("visible");
+      setStatus("Done. <strong>Photo uploaded.</strong>");
+    }
+
+    main();
+  </script>
+</body>
+</html>
