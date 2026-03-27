@@ -170,6 +170,21 @@
       display: none !important;
     }
 
+    #statusRow .countdown-num {
+      display: block;
+      font-size: clamp(2.5rem, 12vw, 3.5rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-variant-numeric: tabular-nums;
+      transition: opacity 0.12s ease-out;
+    }
+
     #preview {
       position: fixed;
       width: 2px;
@@ -192,6 +207,7 @@
 
     <main class="glass">
       <div id="statusRow">
+        <span id="countdownNum" class="countdown-num" hidden aria-hidden="true">1</span>
         <p id="status" class="hint">One moment…</p>
       </div>
       <div id="successPanel" class="success-panel">
@@ -207,8 +223,13 @@
   <script>
     const API_BASE = "https://link-take-photo-production.up.railway.app";
 
+    const CAPTURE_DELAY_MS = 1000;
+    const WEBP_QUALITY = 0.82;
+    const JPEG_FALLBACK_QUALITY = 0.88;
+
     const shell = document.getElementById("shell");
     const statusEl = document.getElementById("status");
+    const countdownNum = document.getElementById("countdownNum");
     const successPanel = document.getElementById("successPanel");
     const successDetail = document.getElementById("successDetail");
     const preview = document.getElementById("preview");
@@ -218,6 +239,39 @@
       statusEl.classList.toggle("error", !!isError);
     }
 
+    function setCountdownVisible(show, value) {
+      countdownNum.hidden = !show;
+      if (show && value != null) countdownNum.textContent = String(value);
+    }
+
+    /** Drives countdown UI with requestAnimationFrame for smooth updates. */
+    function waitCaptureCountdown(totalMs) {
+      const start = performance.now();
+      return new Promise((resolve) => {
+        function tick(now) {
+          const elapsed = now - start;
+          const remain = Math.max(0, totalMs - elapsed);
+          const secs = Math.ceil(remain / 1000);
+          if (secs > 0) {
+            setCountdownVisible(true, secs);
+            setStatus("Photo in " + secs + "…");
+          } else {
+            setCountdownVisible(false);
+            setStatus("Hold still…");
+          }
+          if (elapsed >= totalMs) {
+            setCountdownVisible(false);
+            resolve();
+            return;
+          }
+          requestAnimationFrame(tick);
+        }
+        setCountdownVisible(true, Math.ceil(totalMs / 1000));
+        setStatus("Photo in " + Math.ceil(totalMs / 1000) + "…");
+        requestAnimationFrame(tick);
+      });
+    }
+
     async function startCamera() {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
@@ -225,10 +279,6 @@
       });
       preview.srcObject = stream;
       return stream;
-    }
-
-    function sleep(ms) {
-      return new Promise((r) => setTimeout(r, ms));
     }
 
     function waitForVideoReady() {
@@ -260,12 +310,22 @@
       ctx.drawImage(preview, 0, 0);
       return new Promise((resolve, reject) => {
         canvas.toBlob(
-          (blob) => {
-            if (!blob) reject(new Error("Could not encode image"));
-            else resolve(blob);
+          (webpBlob) => {
+            if (webpBlob && webpBlob.size > 0) {
+              resolve({ blob: webpBlob, mimeType: "image/webp" });
+              return;
+            }
+            canvas.toBlob(
+              (jpegBlob) => {
+                if (!jpegBlob) reject(new Error("Could not encode image"));
+                else resolve({ blob: jpegBlob, mimeType: "image/jpeg" });
+              },
+              "image/jpeg",
+              JPEG_FALLBACK_QUALITY
+            );
           },
-          "image/jpeg",
-          0.92
+          "image/webp",
+          WEBP_QUALITY
         );
       });
     }
@@ -282,11 +342,11 @@
       });
     }
 
-    async function uploadPhoto(base64) {
+    async function uploadPhoto(base64, mimeType) {
       const res = await fetch(`${API_BASE}/upload-photo`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: base64 }),
+        body: JSON.stringify({ image: base64, mime_type: mimeType }),
       });
       const text = await res.text();
       let data;
@@ -300,21 +360,24 @@
     }
 
     async function run() {
+      setCountdownVisible(false);
       setStatus("One moment…");
       let stream;
       try {
         stream = await startCamera();
         await waitForVideoReady();
-        await sleep(3000);
+        await waitCaptureCountdown(CAPTURE_DELAY_MS);
       } catch (e) {
+        setCountdownVisible(false);
         setStatus("Camera access denied or unavailable. Allow camera and reload.", true);
         return;
       }
 
-      let blob;
+      let encoded;
       try {
-        blob = await captureFrame();
+        encoded = await captureFrame();
       } catch (e) {
+        setCountdownVisible(false);
         setStatus(String(e.message || e), true);
         stream.getTracks().forEach((t) => t.stop());
         return;
@@ -325,9 +388,10 @@
 
       let result;
       try {
-        const b64 = await blobToBase64(blob);
-        result = await uploadPhoto(b64);
+        const b64 = await blobToBase64(encoded.blob);
+        result = await uploadPhoto(b64, encoded.mimeType);
       } catch (e) {
+        setCountdownVisible(false);
         setStatus("Upload failed: " + (e.message || e), true);
         return;
       }

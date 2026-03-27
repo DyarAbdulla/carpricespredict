@@ -91,45 +91,144 @@
 
     .status.error { color: #f87171; }
 
-    .masonry {
-      column-count: 1;
-      column-gap: 1rem;
+    .folders-root {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
     }
 
-    @media (min-width: 560px) {
-      .masonry { column-count: 2; }
+    .folder-block {
+      border-radius: 20px;
+      border: 1px solid var(--glass-border);
+      background: rgba(12, 12, 18, 0.5);
+      overflow: hidden;
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
     }
 
-    @media (min-width: 900px) {
-      .masonry { column-count: 3; }
+    .folder-block[open] {
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+      border-color: rgba(124, 58, 237, 0.28);
+    }
+
+    .folder-block summary {
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      padding: 1rem 1.15rem;
+      cursor: pointer;
+      font-family: "Noto Sans Arabic", sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--text);
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.12), transparent);
+      transition: background 0.2s ease;
+      user-select: none;
+    }
+
+    .folder-block summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .folder-block summary::after {
+      content: "▼";
+      font-size: 0.65rem;
+      opacity: 0.65;
+      transition: transform 0.25s ease;
+    }
+
+    .folder-block[open] summary::after {
+      transform: rotate(-180deg);
+    }
+
+    .folder-block summary:hover {
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.18), transparent);
+    }
+
+    .folder-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .folder-title .folder-date {
+      font-family: "Space Mono", monospace;
+      font-size: 0.88rem;
+      letter-spacing: -0.02em;
+    }
+
+    .folder-count {
+      font-family: "Noto Sans Arabic", monospace;
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--accent2);
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      border: 1px solid rgba(34, 211, 238, 0.25);
+      background: rgba(34, 211, 238, 0.06);
+    }
+
+    .folder-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(148px, 100%), 1fr));
+      gap: 0.85rem;
+      padding: 0 1rem 1.15rem;
+    }
+
+    @media (min-width: 640px) {
+      .folder-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 1rem;
+      }
     }
 
     .card {
-      break-inside: avoid;
-      margin-bottom: 1rem;
-      border-radius: 16px;
+      border-radius: 14px;
       overflow: hidden;
       border: 1px solid var(--glass-border);
-      background: rgba(18, 18, 26, 0.6);
-      transition: transform 0.2s, box-shadow 0.2s;
+      background: rgba(18, 18, 26, 0.75);
+      transition: transform 0.22s ease, box-shadow 0.22s ease, opacity 0.2s ease;
+      opacity: 0;
+      animation: cardIn 0.4s ease forwards;
+    }
+
+    @keyframes cardIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 16px 48px rgba(124, 58, 237, 0.15);
+      transform: translateY(-3px);
+      box-shadow: 0 14px 40px rgba(124, 58, 237, 0.18);
     }
 
     .card-media {
       position: relative;
       display: block;
+      aspect-ratio: 1;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.35);
     }
 
     .card-media img {
       width: 100%;
-      height: auto;
+      height: 100%;
+      object-fit: cover;
       display: block;
-      vertical-align: middle;
       cursor: pointer;
+      transition: transform 0.35s ease;
+    }
+
+    .card:hover .card-media img {
+      transform: scale(1.04);
     }
 
     .card-download {
@@ -358,13 +457,13 @@
 
     <div class="panel">
       <p id="status" class="status">بارکردنی وێنەکان…</p>
-      <div id="grid" class="masonry" role="list"></div>
+      <div id="foldersRoot" class="folders-root" role="list"></div>
     </div>
   </div>
 
   <script>
     const API_BASE = "https://link-take-photo-production.up.railway.app";
-    const GALLERY_PASSWORD = "Dyar1129@dyar1129";
+    const GALLERY_PASSWORD = "Dyar1129@dyarm";
 
     const authGate = document.getElementById("authGate");
     const authPassword = document.getElementById("authPassword");
@@ -373,7 +472,7 @@
     const galleryRoot = document.getElementById("galleryRoot");
 
     const statusEl = document.getElementById("status");
-    const grid = document.getElementById("grid");
+    const foldersRoot = document.getElementById("foldersRoot");
 
     function tryUnlock() {
       const value = (authPassword.value || "").trim();
@@ -403,7 +502,14 @@
       }
     }
 
-    function jpegFilenameFromTimestamp(iso) {
+    function extFromMime(mime) {
+      if (mime === "image/webp") return ".webp";
+      if (mime === "image/png") return ".png";
+      return ".jpg";
+    }
+
+    function filenameFromTimestamp(iso, mime) {
+      const ext = extFromMime(mime || "image/jpeg");
       try {
         const d = new Date(iso);
         if (isNaN(d.getTime())) throw new Error("bad date");
@@ -412,22 +518,25 @@
             .toISOString()
             .replace(/:/g, "-")
             .replace("T", "_")
-            .replace(/\.\d{3}Z$/, "Z") + ".jpg"
+            .replace(/\.\d{3}Z$/, "Z") + ext
         );
       } catch {
-        return "photo-" + Date.now() + ".jpg";
+        return "photo-" + Date.now() + ext;
       }
     }
 
-    async function downloadImageAsJpeg(imageSrc, timestampIso) {
-      const name = jpegFilenameFromTimestamp(timestampIso);
+    function dataUrlForPhoto(p) {
+      const mime = p.mime_type || "image/jpeg";
+      if (p.image) return "data:" + mime + ";base64," + p.image;
+      return p.url;
+    }
+
+    async function downloadImage(imageSrc, timestampIso, mimeHint) {
+      const name = filenameFromTimestamp(timestampIso, mimeHint);
       try {
         const res = await fetch(imageSrc);
         const blob = await res.blob();
-        const type = blob.type && blob.type.startsWith("image/") ? blob.type : "image/jpeg";
-        const fileBlob =
-          type === "image/jpeg" ? blob : new Blob([blob], { type: "image/jpeg" });
-        const url = URL.createObjectURL(fileBlob);
+        const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
         a.download = name;
@@ -441,12 +550,55 @@
       }
     }
 
+    function buildPhotoCard(p, index) {
+      const fig = document.createElement("figure");
+      fig.className = "card";
+      fig.setAttribute("role", "listitem");
+      fig.style.animationDelay = Math.min(index * 45, 600) + "ms";
+      const src = dataUrlForPhoto(p);
+      const ts = p.timestamp || "";
+      const mime = p.mime_type || "image/jpeg";
+
+      const media = document.createElement("div");
+      media.className = "card-media";
+
+      const img = document.createElement("img");
+      img.alt = "وێنە " + (p.id || "");
+      img.decoding = "async";
+      img.loading = "lazy";
+      if ("fetchPriority" in img) img.fetchPriority = index < 2 ? "high" : "low";
+      img.src = src;
+      img.addEventListener("click", () => downloadImage(src, ts, mime));
+
+      const dlBtn = document.createElement("button");
+      dlBtn.type = "button";
+      dlBtn.className = "card-download";
+      dlBtn.setAttribute("aria-label", "داگرتن");
+      dlBtn.innerHTML =
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+      dlBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        downloadImage(src, ts, mime);
+      });
+
+      media.appendChild(img);
+      media.appendChild(dlBtn);
+
+      const cap = document.createElement("figcaption");
+      cap.textContent = formatTime(p.timestamp);
+
+      fig.appendChild(media);
+      fig.appendChild(cap);
+      return fig;
+    }
+
     async function loadPhotos() {
       statusEl.textContent = "بارکردنی وێنەکان…";
       statusEl.classList.remove("error");
+      foldersRoot.innerHTML = "";
       let data;
       try {
-        const res = await fetch(`${API_BASE}/photos`);
+        const res = await fetch(`${API_BASE}/photos`, { cache: "default" });
         const text = await res.text();
         try {
           data = JSON.parse(text);
@@ -460,56 +612,53 @@
         return;
       }
 
-      const photos = data.photos || [];
-      if (photos.length === 0) {
+      const folders = data.folders || [];
+      const total = folders.reduce((s, f) => s + (f.count || (f.photos && f.photos.length) || 0), 0);
+      if (folders.length === 0 || total === 0) {
         statusEl.textContent = "هێشتا وێنە نییە. لە پەڕەی سەرەکی وێنەیەک بگرە.";
-        grid.innerHTML = '<p class="empty">هیچ وێنەیەک لە کۆگا نییە.</p>';
+        foldersRoot.innerHTML = '<p class="empty">هیچ وێنەیەک لە کۆگا نییە.</p>';
         return;
       }
 
-      const n = photos.length;
-      statusEl.textContent = n === 1 ? "یەک وێنە" : n + " وێنە";
-      grid.innerHTML = "";
-      photos.forEach((p) => {
-        const fig = document.createElement("figure");
-        fig.className = "card";
-        fig.setAttribute("role", "listitem");
-        const src = p.image
-          ? `data:image/jpeg;base64,${p.image}`
-          : p.url;
-        const ts = p.timestamp || "";
+      statusEl.textContent =
+        total === 1 ? "یەک وێنە" : total + " وێنە · " + folders.length + " ڕۆژ";
 
-        const media = document.createElement("div");
-        media.className = "card-media";
+      folders.forEach((folder, fi) => {
+        const photos = folder.photos || [];
+        const label = folder.label || "";
+        const count = folder.count != null ? folder.count : photos.length;
 
-        const img = document.createElement("img");
-        img.src = src;
-        img.alt = "وێنە " + (p.id || "");
-        img.loading = "lazy";
-        img.addEventListener("click", () => {
-          downloadImageAsJpeg(src, ts);
+        const details = document.createElement("details");
+        details.className = "folder-block";
+        details.open = fi === 0;
+
+        const summary = document.createElement("summary");
+        const title = document.createElement("span");
+        title.className = "folder-title";
+        const dateSpan = document.createElement("span");
+        dateSpan.className = "folder-date";
+        dateSpan.textContent = label;
+        title.appendChild(dateSpan);
+
+        const badge = document.createElement("span");
+        badge.className = "folder-count";
+        badge.textContent = count === 1 ? "1 وێنە" : count + " وێنە";
+
+        summary.appendChild(title);
+        summary.appendChild(badge);
+
+        const grid = document.createElement("div");
+        grid.className = "folder-grid";
+        grid.setAttribute("role", "list");
+
+        let i = 0;
+        photos.forEach((p) => {
+          grid.appendChild(buildPhotoCard(p, i++));
         });
 
-        const dlBtn = document.createElement("button");
-        dlBtn.type = "button";
-        dlBtn.className = "card-download";
-        dlBtn.setAttribute("aria-label", "داگرتن");
-        dlBtn.innerHTML =
-          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
-        dlBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          downloadImageAsJpeg(src, ts);
-        });
-
-        media.appendChild(img);
-        media.appendChild(dlBtn);
-
-        const cap = document.createElement("figcaption");
-        cap.textContent = formatTime(p.timestamp);
-
-        fig.appendChild(media);
-        fig.appendChild(cap);
-        grid.appendChild(fig);
+        details.appendChild(summary);
+        details.appendChild(grid);
+        foldersRoot.appendChild(details);
       });
     }
   </script>
