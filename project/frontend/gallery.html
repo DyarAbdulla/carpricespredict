@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ckb" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>La Table — Guest gallery</title>
+  <title>لە تابل — گالەری میوانان</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <style>
     :root {
       --bg0: #0a0a0f;
@@ -23,7 +23,7 @@
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: "Syne", system-ui, sans-serif;
+      font-family: "Noto Sans Arabic", system-ui, sans-serif;
       color: var(--text);
       background:
         radial-gradient(ellipse 100% 60% at 50% 0%, rgba(124, 58, 237, 0.25), transparent 55%),
@@ -47,8 +47,8 @@
 
     .logo {
       font-weight: 800;
-      font-size: 1.35rem;
-      letter-spacing: -0.02em;
+      font-size: 1.25rem;
+      letter-spacing: 0;
       background: linear-gradient(135deg, var(--text), var(--accent2));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -56,7 +56,7 @@
     }
 
     .nav-link {
-      font-family: "Space Mono", monospace;
+      font-family: "Noto Sans Arabic", monospace;
       font-size: 0.8rem;
       color: var(--muted);
       text-decoration: none;
@@ -83,7 +83,7 @@
     }
 
     .status {
-      font-family: "Space Mono", monospace;
+      font-family: "Noto Sans Arabic", monospace;
       font-size: 0.8rem;
       color: var(--muted);
       margin-bottom: 1.25rem;
@@ -128,7 +128,7 @@
 
     .card figcaption {
       padding: 0.75rem 1rem;
-      font-family: "Space Mono", monospace;
+      font-family: "Noto Sans Arabic", monospace;
       font-size: 0.7rem;
       color: var(--muted);
       border-top: 1px solid var(--glass-border);
@@ -137,12 +137,11 @@
     .empty {
       text-align: center;
       padding: 3rem 1rem;
-      font-family: "Space Mono", monospace;
+      font-family: "Noto Sans Arabic", monospace;
       font-size: 0.85rem;
       color: var(--muted);
     }
 
-    /* Password gate */
     .auth-gate {
       position: fixed;
       inset: 0;
@@ -185,9 +184,10 @@
 
     .auth-card h1 {
       margin: 0 0 0.35rem;
+      font-family: "Noto Sans Arabic", sans-serif;
       font-size: 1.35rem;
       font-weight: 800;
-      letter-spacing: -0.02em;
+      letter-spacing: 0;
       background: linear-gradient(135deg, var(--text), var(--accent2));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -196,20 +196,20 @@
 
     .auth-card p.sub {
       margin: 0 0 1.5rem;
-      font-family: "Space Mono", monospace;
-      font-size: 0.72rem;
+      font-family: "Noto Sans Arabic", monospace;
+      font-size: 0.8rem;
       color: var(--muted);
-      line-height: 1.5;
+      line-height: 1.6;
     }
 
     .auth-card label {
       display: block;
-      font-family: "Space Mono", monospace;
-      font-size: 0.7rem;
+      font-family: "Noto Sans Arabic", monospace;
+      font-size: 0.72rem;
       color: var(--muted);
       margin-bottom: 0.5rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
+      text-transform: none;
+      letter-spacing: 0;
     }
 
     .auth-card input[type="password"] {
@@ -245,7 +245,7 @@
       flex: 1;
       min-width: 120px;
       padding: 0.85rem 1.25rem;
-      font-family: "Syne", system-ui, sans-serif;
+      font-family: "Noto Sans Arabic", system-ui, sans-serif;
       font-weight: 700;
       font-size: 0.9rem;
       color: var(--text);
@@ -269,8 +269,8 @@
     .auth-error {
       margin-top: 1rem;
       padding: 0.65rem 0.85rem;
-      font-family: "Space Mono", monospace;
-      font-size: 0.72rem;
+      font-family: "Noto Sans Arabic", monospace;
+      font-size: 0.75rem;
       color: #fca5a5;
       background: rgba(248, 113, 113, 0.1);
       border: 1px solid rgba(248, 113, 113, 0.25);
@@ -290,9 +290,9 @@
 <body>
   <div id="authGate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="authTitle">
     <div class="auth-card">
-      <h1 id="authTitle">La Table</h1>
-      <p class="sub">Guest archive — enter the password from your host.</p>
-      <label for="authPassword">Password</label>
+      <h1 id="authTitle">لە تابل</h1>
+      <p class="sub">ئەرشیفی میوانان — تێپەڕەوشەکە لە لایەن میواندارەوە وەربگرە.</p>
+      <label for="authPassword">تێپەڕەوشە</label>
       <input
         id="authPassword"
         type="password"
@@ -300,20 +300,20 @@
         placeholder="••••••••••••"
       />
       <div class="auth-actions">
-        <button type="button" id="authUnlock">Unlock</button>
+        <button type="button" id="authUnlock">کردنەوە</button>
       </div>
-      <p id="authError" class="auth-error" role="alert">Incorrect password. Access denied.</p>
+      <p id="authError" class="auth-error" role="alert">تێپەڕەوشە هەڵەیە. دەستپێگەیشتن بەستراوە.</p>
     </div>
   </div>
 
   <div id="galleryRoot" class="wrap" hidden>
     <header>
-      <span class="logo">Guest gallery</span>
-      <a class="nav-link" href="index.html">← Welcome</a>
+      <span class="logo">گالەری میوانان</span>
+      <a class="nav-link" href="index.html">بەخێربێیت ←</a>
     </header>
 
     <div class="panel">
-      <p id="status" class="status">Loading photos…</p>
+      <p id="status" class="status">بارکردنی وێنەکان…</p>
       <div id="grid" class="masonry" role="list"></div>
     </div>
   </div>
@@ -353,14 +353,14 @@
 
     function formatTime(iso) {
       try {
-        return new Date(iso).toLocaleString();
+        return new Date(iso).toLocaleString("ckb-IQ");
       } catch {
         return iso;
       }
     }
 
     async function loadPhotos() {
-      statusEl.textContent = "Loading photos…";
+      statusEl.textContent = "بارکردنی وێنەکان…";
       statusEl.classList.remove("error");
       let data;
       try {
@@ -369,23 +369,24 @@
         try {
           data = JSON.parse(text);
         } catch {
-          throw new Error(text || "Invalid response");
+          throw new Error(text || "وەڵامێکی نادروست");
         }
         if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
       } catch (e) {
-        statusEl.textContent = "Could not load photos: " + (e.message || e) + " — check API at " + API_BASE;
+        statusEl.textContent = "نەتوانرا وێنەکان بباردرێن: " + (e.message || e) + " — API لە " + API_BASE + " بپشکنە";
         statusEl.classList.add("error");
         return;
       }
 
       const photos = data.photos || [];
       if (photos.length === 0) {
-        statusEl.textContent = "No photos yet. Capture one from the home page.";
-        grid.innerHTML = '<p class="empty">No photos in storage.</p>';
+        statusEl.textContent = "هێشتا وێنە نییە. لە پەڕەی سەرەکی وێنەیەک بگرە.";
+        grid.innerHTML = '<p class="empty">هیچ وێنەیەک لە کۆگا نییە.</p>';
         return;
       }
 
-      statusEl.textContent = photos.length + " photo" + (photos.length === 1 ? "" : "s");
+      const n = photos.length;
+      statusEl.textContent = n === 1 ? "یەک وێنە" : n + " وێنە";
       grid.innerHTML = "";
       photos.forEach((p) => {
         const fig = document.createElement("figure");
@@ -395,7 +396,7 @@
         img.src = p.image
           ? `data:image/jpeg;base64,${p.image}`
           : p.url;
-        img.alt = "Photo " + (p.id || "");
+        img.alt = "وێنە " + (p.id || "");
         img.loading = "lazy";
         const cap = document.createElement("figcaption");
         cap.textContent = formatTime(p.timestamp);
