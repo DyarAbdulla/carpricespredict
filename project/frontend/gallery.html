@@ -934,13 +934,6 @@
 
       loginError.classList.remove("visible");
 
-      console.log("Entered email:", email);
-      console.log("Expected email:", ADMIN_EMAIL);
-      console.log("Email match:", email.toLowerCase() === ADMIN_EMAIL.toLowerCase());
-      console.log("Entered password:", password);
-      console.log("Expected password:", ADMIN_PASSWORD);
-      console.log("Password match:", password === ADMIN_PASSWORD);
-
       if (email.toLowerCase() === ADMIN_EMAIL.toLowerCase() && password === ADMIN_PASSWORD) {
         sessionStorage.setItem(STORAGE_EMAIL_KEY, email);
         sessionStorage.setItem(STORAGE_PASSWORD_KEY, password);
