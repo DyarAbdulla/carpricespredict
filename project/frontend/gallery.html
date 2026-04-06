@@ -38,11 +38,72 @@
 
     header {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: space-between;
       gap: 1rem;
       flex-wrap: wrap;
       margin-bottom: 2rem;
+    }
+
+    .admin-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem 1rem;
+      font-family: "Space Mono", monospace;
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    .admin-badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--accent2);
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      border: 1px solid rgba(34, 211, 238, 0.35);
+      background: rgba(34, 211, 238, 0.08);
+    }
+
+    .admin-email {
+      color: var(--text);
+      word-break: break-all;
+    }
+
+    .photo-count-pill {
+      font-size: 0.72rem;
+      color: var(--accent2);
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      border: 1px solid rgba(124, 58, 237, 0.35);
+      background: rgba(124, 58, 237, 0.12);
+    }
+
+    .btn-logout {
+      font-family: "Syne", sans-serif;
+      font-weight: 700;
+      font-size: 0.78rem;
+      color: var(--text);
+      cursor: pointer;
+      padding: 0.45rem 0.9rem;
+      border-radius: 999px;
+      border: 1px solid rgba(248, 113, 113, 0.45);
+      background: rgba(248, 113, 113, 0.12);
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .btn-logout:hover {
+      background: rgba(248, 113, 113, 0.25);
+      border-color: rgba(248, 113, 113, 0.65);
+    }
+
+    .header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.65rem;
     }
 
     .logo {
@@ -234,7 +295,8 @@
     .card-download {
       position: absolute;
       top: 0.5rem;
-      right: 0.5rem;
+      left: 0.5rem;
+      right: auto;
       width: 2.35rem;
       height: 2.35rem;
       padding: 0;
@@ -252,6 +314,33 @@
       z-index: 2;
     }
 
+    .card-delete {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      width: 2.35rem;
+      height: 2.35rem;
+      padding: 0;
+      border: 1px solid rgba(248, 113, 113, 0.35);
+      border-radius: 10px;
+      background: rgba(10, 10, 15, 0.65);
+      backdrop-filter: blur(10px);
+      color: #f87171;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s, background 0.2s, transform 0.15s, border-color 0.2s;
+      z-index: 3;
+    }
+
+    .card-delete svg {
+      width: 1.1rem;
+      height: 1.1rem;
+      display: block;
+    }
+
     .card-download svg {
       width: 1.1rem;
       height: 1.1rem;
@@ -259,13 +348,22 @@
     }
 
     .card:hover .card-download,
-    .card-download:focus-visible {
+    .card-download:focus-visible,
+    .card:hover .card-delete,
+    .card-delete:focus-visible {
       opacity: 1;
     }
 
     .card-download:hover {
       background: rgba(124, 58, 237, 0.45);
       color: var(--text);
+      transform: scale(1.05);
+    }
+
+    .card-delete:hover {
+      background: rgba(248, 113, 113, 0.35);
+      color: #fff;
+      border-color: rgba(248, 113, 113, 0.6);
       transform: scale(1.05);
     }
 
@@ -378,7 +476,8 @@
       margin-bottom: 0.5rem;
     }
 
-    .auth-card input[type="password"] {
+    .auth-card input[type="password"],
+    .auth-card input[type="email"] {
       width: 100%;
       padding: 0.85rem 1rem;
       font-family: "Space Mono", monospace;
@@ -389,13 +488,16 @@
       border-radius: 12px;
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
+      margin-bottom: 0.75rem;
     }
 
-    .auth-card input[type="password"]::placeholder {
+    .auth-card input[type="password"]::placeholder,
+    .auth-card input[type="email"]::placeholder {
       color: rgba(152, 152, 168, 0.5);
     }
 
-    .auth-card input[type="password"]:focus {
+    .auth-card input[type="password"]:focus,
+    .auth-card input[type="email"]:focus {
       border-color: rgba(124, 58, 237, 0.55);
       box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
     }
@@ -672,26 +774,43 @@
 <body>
   <div id="authGate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="authTitle">
     <div class="auth-card">
-      <h1 id="authTitle">Protected gallery</h1>
-      <p class="sub">Enter the gallery password to view photos. Your session is remembered until you close the tab.</p>
-      <label for="authPassword">Password</label>
+      <h1 id="authTitle">Admin login</h1>
+      <p class="sub">Sign in with your admin email and password. Session is kept until you close this tab.</p>
+      <label for="loginEmail">Email</label>
       <input
-        id="authPassword"
+        id="loginEmail"
+        type="email"
+        autocomplete="username"
+        placeholder="you@example.com"
+      />
+      <label for="loginPassword">Password</label>
+      <input
+        id="loginPassword"
         type="password"
         autocomplete="current-password"
         placeholder="••••••••••••"
       />
       <div class="auth-actions">
-        <button type="button" id="authUnlock">Unlock</button>
+        <button type="button" id="btnLogin">Login</button>
       </div>
-      <p id="authError" class="auth-error" role="alert">Incorrect password.</p>
+      <p id="loginError" class="auth-error" role="alert">Invalid email or password.</p>
     </div>
   </div>
 
   <div id="galleryRoot" class="wrap" hidden>
     <header>
-      <span class="logo">Guest gallery</span>
-      <a class="nav-link" href="index.html">← Back</a>
+      <div>
+        <span class="logo">Guest gallery</span>
+        <div class="admin-bar" id="adminBar">
+          <span class="admin-badge">Admin</span>
+          <span class="admin-email" id="adminEmailDisplay"></span>
+          <span class="photo-count-pill" id="photoCountPill">0 photos</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button type="button" class="btn-logout" id="btnLogout">Logout</button>
+        <a class="nav-link" href="index.html">← Back</a>
+      </div>
     </header>
 
     <div class="panel">
@@ -748,40 +867,71 @@
 
   <script>
     const API_BASE = "https://link-take-photo-production.up.railway.app";
-    /** Must match server GALLERY_PASSWORD (default in API). */
-    const GALLERY_PASSWORD = "Dyar1129@dyarm";
-    const STORAGE_KEY = "gallery_session_password";
+    const ADMIN_EMAIL = "dyarbadula15@gmail.com";
+    const ADMIN_PASSWORD = "Dyar12345@dyarm";
+    const STORAGE_EMAIL_KEY = "gallery_admin_email";
+    const STORAGE_PASSWORD_KEY = "gallery_admin_password";
+
+    function validateLogin(email, password) {
+      return (
+        (email || "").trim().toLowerCase() === ADMIN_EMAIL.toLowerCase() &&
+        password === ADMIN_PASSWORD
+      );
+    }
 
     const authGate = document.getElementById("authGate");
-    const authPassword = document.getElementById("authPassword");
-    const authUnlock = document.getElementById("authUnlock");
-    const authError = document.getElementById("authError");
+    const loginEmail = document.getElementById("loginEmail");
+    const loginPassword = document.getElementById("loginPassword");
+    const btnLogin = document.getElementById("btnLogin");
+    const loginError = document.getElementById("loginError");
     const galleryRoot = document.getElementById("galleryRoot");
+    const btnLogout = document.getElementById("btnLogout");
+    const adminEmailDisplay = document.getElementById("adminEmailDisplay");
+    const photoCountPill = document.getElementById("photoCountPill");
 
     const statusEl = document.getElementById("status");
     const foldersRoot = document.getElementById("foldersRoot");
 
-    function galleryHeaders() {
-      const pwd = sessionStorage.getItem(STORAGE_KEY) || "";
-      return { "X-Gallery-Password": pwd };
+    function adminHeaders() {
+      const email = sessionStorage.getItem(STORAGE_EMAIL_KEY) || "";
+      const password = sessionStorage.getItem(STORAGE_PASSWORD_KEY) || "";
+      return {
+        "X-Admin-Email": email,
+        "X-Admin-Password": password,
+      };
     }
 
-    function tryUnlock() {
-      const value = (authPassword.value || "").trim();
-      authError.classList.remove("visible");
-      if (value !== GALLERY_PASSWORD) {
-        authError.classList.add("visible");
-        authPassword.value = "";
-        authPassword.focus();
+    function handleLogin() {
+      const email = (loginEmail.value || "").trim();
+      const password = loginPassword.value || "";
+      loginError.classList.remove("visible");
+      if (!validateLogin(email, password)) {
+        loginError.classList.add("visible");
+        loginPassword.value = "";
+        loginPassword.focus();
         return;
       }
-      sessionStorage.setItem(STORAGE_KEY, GALLERY_PASSWORD);
+      sessionStorage.setItem(STORAGE_EMAIL_KEY, email);
+      sessionStorage.setItem(STORAGE_PASSWORD_KEY, password);
       loadPhotos();
     }
 
-    authUnlock.addEventListener("click", tryUnlock);
-    authPassword.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") tryUnlock();
+    function logout() {
+      sessionStorage.removeItem(STORAGE_EMAIL_KEY);
+      sessionStorage.removeItem(STORAGE_PASSWORD_KEY);
+      authGate.classList.remove("hidden");
+      galleryRoot.hidden = true;
+      loginPassword.value = "";
+      loginEmail.focus();
+    }
+
+    btnLogin.addEventListener("click", handleLogin);
+    btnLogout.addEventListener("click", logout);
+    loginPassword.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") handleLogin();
+    });
+    loginEmail.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") loginPassword.focus();
     });
 
     function formatTime(iso) {
@@ -865,6 +1015,47 @@
       } catch (e) {
         console.error(e);
       }
+    }
+
+    async function deletePhoto(photoId) {
+      if (!confirm("Are you sure you want to delete this photo?")) return;
+      try {
+        const res = await fetch(
+          `${API_BASE}/photos/${encodeURIComponent(photoId)}`,
+          {
+            method: "DELETE",
+            headers: adminHeaders(),
+          }
+        );
+        if (res.status === 401) {
+          logout();
+          return;
+        }
+        const text = await res.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          data = {};
+        }
+        if (!res.ok) {
+          alert(data.detail || "Delete failed: HTTP " + res.status);
+          return;
+        }
+        if (lightbox.classList.contains("is-open")) {
+          closeLightbox();
+        }
+        await loadPhotos();
+      } catch (e) {
+        alert("Network error: " + (e.message || e));
+      }
+    }
+
+    function updateAdminChrome(totalPhotos) {
+      photoCountPill.textContent =
+        totalPhotos === 1 ? "1 photo" : totalPhotos + " photos";
+      adminEmailDisplay.textContent =
+        sessionStorage.getItem(STORAGE_EMAIL_KEY) || ADMIN_EMAIL;
     }
 
     /* —— Lightbox —— */
@@ -1151,8 +1342,20 @@
         downloadImage(src, ts, mime);
       });
 
+      const delBtn = document.createElement("button");
+      delBtn.type = "button";
+      delBtn.className = "card-delete";
+      delBtn.setAttribute("aria-label", "Delete photo");
+      delBtn.innerHTML =
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>';
+      delBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        deletePhoto(p.id);
+      });
+
       media.appendChild(img);
       media.appendChild(dlBtn);
+      media.appendChild(delBtn);
 
       const cap = document.createElement("figcaption");
       cap.appendChild(document.createTextNode(formatTime(p.timestamp)));
@@ -1179,6 +1382,7 @@
         statusEl.textContent = "No photos yet. Capture one from the home page.";
         foldersRoot.innerHTML =
           '<p class="empty">No images in storage.</p>';
+        updateAdminChrome(0);
         return;
       }
 
@@ -1186,6 +1390,7 @@
         total === 1
           ? "1 photo"
           : total + " photos · " + folders.length + " days";
+      updateAdminChrome(total);
 
       let globalIdx = 0;
       folders.forEach((folder, fi) => {
@@ -1236,7 +1441,7 @@
       try {
         res = await fetch(`${API_BASE}/photos`, {
           cache: "default",
-          headers: galleryHeaders(),
+          headers: adminHeaders(),
         });
       } catch (e) {
         statusEl.textContent = "Network error: " + (e.message || e);
@@ -1245,12 +1450,13 @@
       }
 
       if (res.status === 401) {
-        sessionStorage.removeItem(STORAGE_KEY);
+        sessionStorage.removeItem(STORAGE_EMAIL_KEY);
+        sessionStorage.removeItem(STORAGE_PASSWORD_KEY);
         authGate.classList.remove("hidden");
         galleryRoot.hidden = true;
-        authError.classList.add("visible");
-        authPassword.value = "";
-        authPassword.focus();
+        loginError.classList.add("visible");
+        loginPassword.value = "";
+        loginEmail.focus();
         return;
       }
 
@@ -1277,19 +1483,20 @@
     }
 
     async function bootstrap() {
-      const saved = sessionStorage.getItem(STORAGE_KEY);
-      if (saved && saved !== GALLERY_PASSWORD) {
-        sessionStorage.removeItem(STORAGE_KEY);
-      }
-      if (sessionStorage.getItem(STORAGE_KEY) === GALLERY_PASSWORD) {
+      const e = sessionStorage.getItem(STORAGE_EMAIL_KEY);
+      const p = sessionStorage.getItem(STORAGE_PASSWORD_KEY);
+      if (e && p && validateLogin(e, p)) {
         authGate.classList.add("hidden");
         galleryRoot.hidden = false;
+        adminEmailDisplay.textContent = e.trim();
         await loadPhotos();
         return;
       }
+      sessionStorage.removeItem(STORAGE_EMAIL_KEY);
+      sessionStorage.removeItem(STORAGE_PASSWORD_KEY);
       authGate.classList.remove("hidden");
       galleryRoot.hidden = true;
-      authPassword.focus();
+      loginEmail.focus();
     }
 
     bootstrap();

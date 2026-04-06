@@ -15,8 +15,9 @@ from pydantic import AliasChoices, BaseModel, Field
 load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL", "")
-# GET /photos requires header X-Gallery-Password. Override with GALLERY_PASSWORD env (e.g. Railway).
-GALLERY_PASSWORD = (os.getenv("GALLERY_PASSWORD") or "Dyar1129@dyarm").strip()
+# Admin gallery: override with ADMIN_EMAIL / ADMIN_PASSWORD on Railway.
+ADMIN_EMAIL = (os.getenv("ADMIN_EMAIL") or "dyarbadula15@gmail.com").strip().lower()
+ADMIN_PASSWORD = (os.getenv("ADMIN_PASSWORD") or "Dyar12345@dyarm").strip()
 database = Database(DATABASE_URL)
 
 
@@ -99,11 +100,17 @@ def validate_location(lat: float | None, lon: float | None, acc: float | None) -
         raise HTTPException(status_code=400, detail="Invalid accuracy value")
 
 
-def require_gallery_password(
-    x_gallery_password: str | None = Header(None, alias="X-Gallery-Password"),
+def require_admin(
+    x_admin_email: str | None = Header(None, alias="X-Admin-Email"),
+    x_admin_password: str | None = Header(None, alias="X-Admin-Password"),
 ) -> None:
-    if not x_gallery_password or x_gallery_password != GALLERY_PASSWORD:
-        raise HTTPException(status_code=401, detail="Invalid gallery password")
+    if not x_admin_email or not x_admin_password:
+        raise HTTPException(status_code=401, detail="Admin authentication required")
+    if (
+        x_admin_email.strip().lower() != ADMIN_EMAIL
+        or x_admin_password != ADMIN_PASSWORD
+    ):
+        raise HTTPException(status_code=401, detail="Invalid admin credentials")
 
 
 def strip_data_url(b64: str) -> str:
@@ -212,7 +219,7 @@ async def upload_photo(body: UploadPhotoBody):
 
 @app.get("/photos")
 async def list_photos(
-    response: Response, _: None = Depends(require_gallery_password)
+    response: Response, _: None = Depends(require_admin)
 ):
     rows = await database.fetch_all(
         """
@@ -267,3 +274,19 @@ async def list_photos(
 
     response.headers["Cache-Control"] = "private, max-age=60"
     return {"folders": folder_list}
+
+
+@app.delete("/photos/{photo_id}")
+async def delete_photo(photo_id: str, _: None = Depends(require_admin)):
+    try:
+        pid = uuid.UUID(photo_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid photo id")
+    row = await database.fetch_one(
+        "SELECT id FROM photos WHERE id = :id",
+        {"id": pid},
+    )
+    if row is None:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    await database.execute("DELETE FROM photos WHERE id = :id", {"id": pid})
+    return {"ok": True, "id": photo_id}
