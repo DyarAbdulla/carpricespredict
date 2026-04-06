@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from databases import Database
 from fastapi import Depends, FastAPI, Header, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from pydantic import AliasChoices, BaseModel, Field
 
 load_dotenv()
 
@@ -79,7 +79,11 @@ class UploadPhotoBody(BaseModel):
     )
     latitude: float | None = Field(None, description="WGS84 latitude")
     longitude: float | None = Field(None, description="WGS84 longitude")
-    accuracy_m: float | None = Field(None, description="Horizontal accuracy in meters")
+    accuracy_m: float | None = Field(
+        None,
+        description="Horizontal accuracy in meters",
+        validation_alias=AliasChoices("accuracy_m", "accuracy"),
+    )
 
 
 def validate_location(lat: float | None, lon: float | None, acc: float | None) -> None:

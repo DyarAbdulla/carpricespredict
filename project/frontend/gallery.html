@@ -279,11 +279,17 @@
     }
 
     .card figcaption .loc {
-      display: block;
+      display: inline-block;
       margin-top: 0.35rem;
       color: var(--accent2);
       font-size: 0.65rem;
       word-break: break-all;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .card figcaption .loc:hover {
+      text-decoration: underline;
     }
 
     .empty {
@@ -640,10 +646,16 @@
     }
 
     .lightbox-footer .loc {
-      display: block;
+      display: inline-block;
       margin-top: 0.35rem;
       color: var(--accent2);
       font-size: 0.68rem;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .lightbox-footer .loc:hover {
+      text-decoration: underline;
     }
 
     @media (max-width: 520px) {
@@ -780,15 +792,31 @@
       }
     }
 
-    function formatLocation(p) {
-      if (p.latitude == null || p.longitude == null) return "";
-      const lat = Number(p.latitude).toFixed(5);
-      const lon = Number(p.longitude).toFixed(5);
-      let s = lat + ", " + lon;
+    function googleMapsUrl(lat, lon) {
+      return (
+        "https://maps.google.com/?q=" +
+        encodeURIComponent(String(lat) + "," + String(lon))
+      );
+    }
+
+    function appendLocationLine(container, p) {
+      if (p.latitude == null || p.longitude == null) return;
+      const lat = Number(p.latitude);
+      const lon = Number(p.longitude);
+      if (Number.isNaN(lat) || Number.isNaN(lon)) return;
+      const br = document.createElement("br");
+      container.appendChild(br);
+      const a = document.createElement("a");
+      a.className = "loc";
+      a.href = googleMapsUrl(lat, lon);
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      let label = "📍 " + lat.toFixed(5) + ", " + lon.toFixed(5);
       if (p.accuracy_m != null && !Number.isNaN(Number(p.accuracy_m))) {
-        s += " (±" + Math.round(Number(p.accuracy_m)) + " m)";
+        label += " (±" + Math.round(Number(p.accuracy_m)) + " m)";
       }
-      return s;
+      a.textContent = label;
+      container.appendChild(a);
     }
 
     function extFromMime(mime) {
@@ -894,13 +922,7 @@
       lbImg.src = src;
       lbCaption.innerHTML = "";
       lbCaption.appendChild(document.createTextNode(formatTime(p.timestamp)));
-      const locLine = formatLocation(p);
-      if (locLine) {
-        const loc = document.createElement("span");
-        loc.className = "loc";
-        loc.textContent = locLine;
-        lbCaption.appendChild(loc);
-      }
+      appendLocationLine(lbCaption, p);
       lbPrev.disabled = lbIndex <= 0;
       lbNext.disabled = lbIndex >= galleryPhotosFlat.length - 1;
     }
@@ -1107,8 +1129,6 @@
       const src = dataUrlForPhoto(p);
       const ts = p.timestamp || "";
       const mime = p.mime_type || "image/jpeg";
-      const locLine = formatLocation(p);
-
       const media = document.createElement("div");
       media.className = "card-media";
 
@@ -1136,12 +1156,7 @@
 
       const cap = document.createElement("figcaption");
       cap.appendChild(document.createTextNode(formatTime(p.timestamp)));
-      if (locLine) {
-        const loc = document.createElement("span");
-        loc.className = "loc";
-        loc.textContent = locLine;
-        cap.appendChild(loc);
-      }
+      appendLocationLine(cap, p);
 
       fig.appendChild(media);
       fig.appendChild(cap);
