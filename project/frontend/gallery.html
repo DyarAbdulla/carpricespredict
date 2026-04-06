@@ -873,9 +873,11 @@
     const STORAGE_PASSWORD_KEY = "gallery_admin_password";
 
     function validateLogin(email, password) {
+      const inputEmail = (email || "").trim().toLowerCase();
+      const inputPassword = (password || "").trim();
       return (
-        (email || "").trim().toLowerCase() === ADMIN_EMAIL.toLowerCase() &&
-        password === ADMIN_PASSWORD
+        inputEmail === ADMIN_EMAIL.toLowerCase() &&
+        inputPassword === ADMIN_PASSWORD
       );
     }
 
@@ -895,15 +897,15 @@
     function adminHeaders() {
       const email = sessionStorage.getItem(STORAGE_EMAIL_KEY) || "";
       const password = sessionStorage.getItem(STORAGE_PASSWORD_KEY) || "";
+      const pair = email + ":" + password;
       return {
-        "X-Admin-Email": email,
-        "X-Admin-Password": password,
+        Authorization: "Basic " + btoa(pair),
       };
     }
 
     function handleLogin() {
       const email = (loginEmail.value || "").trim();
-      const password = loginPassword.value || "";
+      const password = (loginPassword.value || "").trim();
       loginError.classList.remove("visible");
       if (!validateLogin(email, password)) {
         loginError.classList.add("visible");

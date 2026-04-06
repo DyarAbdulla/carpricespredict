@@ -15,7 +15,7 @@ from pydantic import AliasChoices, BaseModel, Field
 load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL", "")
-# Admin gallery: override with ADMIN_EMAIL / ADMIN_PASSWORD on Railway.
+# Admin gallery: override with ADMIN_EMAIL / ADMIN_PASSWORD on Railway (must match frontend).
 ADMIN_EMAIL = (os.getenv("ADMIN_EMAIL") or "dyarbadula15@gmail.com").strip().lower()
 ADMIN_PASSWORD = (os.getenv("ADMIN_PASSWORD") or "Dyar12345@dyarm").strip()
 database = Database(DATABASE_URL)
@@ -101,15 +101,30 @@ def validate_location(lat: float | None, lon: float | None, acc: float | None) -
 
 
 def require_admin(
+    authorization: str | None = Header(None),
     x_admin_email: str | None = Header(None, alias="X-Admin-Email"),
     x_admin_password: str | None = Header(None, alias="X-Admin-Password"),
 ) -> None:
-    if not x_admin_email or not x_admin_password:
+    email_in = ""
+    pw_in = ""
+    if authorization and authorization.strip().lower().startswith("basic "):
+        try:
+            decoded = base64.b64decode(authorization.split(None, 1)[1].strip()).decode(
+                "utf-8"
+            )
+            user, sep, pw = decoded.partition(":")
+            if not sep:
+                raise ValueError("missing colon")
+            email_in = user.strip().lower()
+            pw_in = pw.strip()
+        except Exception:
+            raise HTTPException(status_code=401, detail="Invalid admin credentials")
+    else:
+        email_in = (x_admin_email or "").strip().lower()
+        pw_in = (x_admin_password or "").strip()
+    if not email_in or not pw_in:
         raise HTTPException(status_code=401, detail="Admin authentication required")
-    if (
-        x_admin_email.strip().lower() != ADMIN_EMAIL
-        or x_admin_password != ADMIN_PASSWORD
-    ):
+    if email_in != ADMIN_EMAIL or pw_in != ADMIN_PASSWORD:
         raise HTTPException(status_code=401, detail="Invalid admin credentials")
 
 
