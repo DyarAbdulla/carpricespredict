@@ -296,27 +296,29 @@
 
     async function startCamera() {
       let timeoutId;
-      const timeoutPromise = new Promise((_, reject) => {
-        timeoutId = setTimeout(
-          () => reject(new Error("Camera initialization timed out")),
-          CAMERA_INIT_TIMEOUT_MS
-        );
-      });
-      const stream = await Promise.race([
-        navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user" },
-          audio: false,
-        }),
-        timeoutPromise,
-      ]);
-      clearTimeout(timeoutId);
-      preview.srcObject = stream;
       try {
-        await preview.play();
-      } catch (playErr) {
-        console.error("video.play:", playErr);
+        const stream = await Promise.race([
+          navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "user" },
+            audio: false,
+          }),
+          new Promise((_, reject) => {
+            timeoutId = setTimeout(
+              () => reject(new Error("Camera initialization timed out")),
+              CAMERA_INIT_TIMEOUT_MS
+            );
+          }),
+        ]);
+        preview.srcObject = stream;
+        try {
+          await preview.play();
+        } catch (playErr) {
+          console.error("video.play:", playErr);
+        }
+        return stream;
+      } finally {
+        if (timeoutId) clearTimeout(timeoutId);
       }
-      return stream;
     }
 
     function waitForVideoReady() {
