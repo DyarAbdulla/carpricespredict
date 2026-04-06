@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="ckb" dir="rtl">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>لە تابل — گالەری میوانان</title>
+  <title>Guest gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     :root {
       --bg0: #0a0a0f;
@@ -23,7 +23,7 @@
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: "Noto Sans Arabic", system-ui, sans-serif;
+      font-family: "Syne", system-ui, sans-serif;
       color: var(--text);
       background:
         radial-gradient(ellipse 100% 60% at 50% 0%, rgba(124, 58, 237, 0.25), transparent 55%),
@@ -48,7 +48,7 @@
     .logo {
       font-weight: 800;
       font-size: 1.25rem;
-      letter-spacing: 0;
+      letter-spacing: -0.02em;
       background: linear-gradient(135deg, var(--text), var(--accent2));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -56,7 +56,7 @@
     }
 
     .nav-link {
-      font-family: "Noto Sans Arabic", monospace;
+      font-family: "Space Mono", monospace;
       font-size: 0.8rem;
       color: var(--muted);
       text-decoration: none;
@@ -83,7 +83,7 @@
     }
 
     .status {
-      font-family: "Noto Sans Arabic", monospace;
+      font-family: "Space Mono", monospace;
       font-size: 0.8rem;
       color: var(--muted);
       margin-bottom: 1.25rem;
@@ -119,7 +119,7 @@
       flex-wrap: wrap;
       padding: 1rem 1.15rem;
       cursor: pointer;
-      font-family: "Noto Sans Arabic", sans-serif;
+      font-family: "Syne", sans-serif;
       font-weight: 700;
       font-size: 0.95rem;
       color: var(--text);
@@ -160,7 +160,7 @@
     }
 
     .folder-count {
-      font-family: "Noto Sans Arabic", monospace;
+      font-family: "Space Mono", monospace;
       font-size: 0.72rem;
       font-weight: 500;
       color: var(--accent2);
@@ -179,7 +179,7 @@
 
     @media (min-width: 640px) {
       .folder-grid {
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
         gap: 1rem;
       }
     }
@@ -234,7 +234,7 @@
     .card-download {
       position: absolute;
       top: 0.5rem;
-      inset-inline-end: 0.5rem;
+      right: 0.5rem;
       width: 2.35rem;
       height: 2.35rem;
       padding: 0;
@@ -271,16 +271,25 @@
 
     .card figcaption {
       padding: 0.75rem 1rem;
-      font-family: "Noto Sans Arabic", monospace;
-      font-size: 0.7rem;
+      font-family: "Space Mono", monospace;
+      font-size: 0.68rem;
       color: var(--muted);
       border-top: 1px solid var(--glass-border);
+      line-height: 1.45;
+    }
+
+    .card figcaption .loc {
+      display: block;
+      margin-top: 0.35rem;
+      color: var(--accent2);
+      font-size: 0.65rem;
+      word-break: break-all;
     }
 
     .empty {
       text-align: center;
       padding: 3rem 1rem;
-      font-family: "Noto Sans Arabic", monospace;
+      font-family: "Space Mono", monospace;
       font-size: 0.85rem;
       color: var(--muted);
     }
@@ -327,10 +336,10 @@
 
     .auth-card h1 {
       margin: 0 0 0.35rem;
-      font-family: "Noto Sans Arabic", sans-serif;
+      font-family: "Syne", sans-serif;
       font-size: 1.35rem;
       font-weight: 800;
-      letter-spacing: 0;
+      letter-spacing: -0.02em;
       background: linear-gradient(135deg, var(--text), var(--accent2));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -339,7 +348,7 @@
 
     .auth-card p.sub {
       margin: 0 0 1.5rem;
-      font-family: "Noto Sans Arabic", monospace;
+      font-family: "Space Mono", monospace;
       font-size: 0.8rem;
       color: var(--muted);
       line-height: 1.6;
@@ -347,12 +356,10 @@
 
     .auth-card label {
       display: block;
-      font-family: "Noto Sans Arabic", monospace;
+      font-family: "Space Mono", monospace;
       font-size: 0.72rem;
       color: var(--muted);
       margin-bottom: 0.5rem;
-      text-transform: none;
-      letter-spacing: 0;
     }
 
     .auth-card input[type="password"] {
@@ -388,7 +395,7 @@
       flex: 1;
       min-width: 120px;
       padding: 0.85rem 1.25rem;
-      font-family: "Noto Sans Arabic", system-ui, sans-serif;
+      font-family: "Syne", system-ui, sans-serif;
       font-weight: 700;
       font-size: 0.9rem;
       color: var(--text);
@@ -412,7 +419,7 @@
     .auth-error {
       margin-top: 1rem;
       padding: 0.65rem 0.85rem;
-      font-family: "Noto Sans Arabic", monospace;
+      font-family: "Space Mono", monospace;
       font-size: 0.75rem;
       color: #fca5a5;
       background: rgba(248, 113, 113, 0.1);
@@ -431,11 +438,11 @@
   </style>
 </head>
 <body>
-  <div id="authGate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+  <div id="authGate" class="auth-gate hidden" role="dialog" aria-modal="true" aria-labelledby="authTitle">
     <div class="auth-card">
-      <h1 id="authTitle">لە تابل</h1>
-      <p class="sub">ئەرشیفی میوانان — تێپەڕەوشەکە لە لایەن میواندارەوە وەربگرە.</p>
-      <label for="authPassword">تێپەڕەوشە</label>
+      <h1 id="authTitle">Gallery</h1>
+      <p class="sub">Enter the gallery password from your host (e.g. Railway <code>GALLERY_PASSWORD</code>).</p>
+      <label for="authPassword">Password</label>
       <input
         id="authPassword"
         type="password"
@@ -443,27 +450,27 @@
         placeholder="••••••••••••"
       />
       <div class="auth-actions">
-        <button type="button" id="authUnlock">کردنەوە</button>
+        <button type="button" id="authUnlock">Unlock</button>
       </div>
-      <p id="authError" class="auth-error" role="alert">تێپەڕەوشە هەڵەیە. دەستپێگەیشتن بەستراوە.</p>
+      <p id="authError" class="auth-error" role="alert">Incorrect password.</p>
     </div>
   </div>
 
   <div id="galleryRoot" class="wrap" hidden>
     <header>
-      <span class="logo">گالەری میوانان</span>
-      <a class="nav-link" href="index.html">بەخێربێیت ←</a>
+      <span class="logo">Guest gallery</span>
+      <a class="nav-link" href="index.html">← Back</a>
     </header>
 
     <div class="panel">
-      <p id="status" class="status">بارکردنی وێنەکان…</p>
+      <p id="status" class="status">Loading photos…</p>
       <div id="foldersRoot" class="folders-root" role="list"></div>
     </div>
   </div>
 
   <script>
     const API_BASE = "https://link-take-photo-production.up.railway.app";
-    const GALLERY_PASSWORD = "Dyar1129@dyarm";
+    const STORAGE_KEY = "gallery_password";
 
     const authGate = document.getElementById("authGate");
     const authPassword = document.getElementById("authPassword");
@@ -474,32 +481,42 @@
     const statusEl = document.getElementById("status");
     const foldersRoot = document.getElementById("foldersRoot");
 
+    function galleryHeaders() {
+      const pwd = sessionStorage.getItem(STORAGE_KEY) || "";
+      const h = {};
+      if (pwd) h["X-Gallery-Password"] = pwd;
+      return h;
+    }
+
     function tryUnlock() {
       const value = (authPassword.value || "").trim();
-      if (value === GALLERY_PASSWORD) {
-        authError.classList.remove("visible");
-        authGate.classList.add("hidden");
-        galleryRoot.hidden = false;
-        loadPhotos();
-        return;
-      }
-      authError.classList.add("visible");
-      authPassword.value = "";
-      authPassword.focus();
+      sessionStorage.setItem(STORAGE_KEY, value);
+      authError.classList.remove("visible");
+      loadPhotos();
     }
 
     authUnlock.addEventListener("click", tryUnlock);
     authPassword.addEventListener("keydown", (e) => {
       if (e.key === "Enter") tryUnlock();
     });
-    authPassword.focus();
 
     function formatTime(iso) {
       try {
-        return new Date(iso).toLocaleString("ckb-IQ");
+        return new Date(iso).toLocaleString("en-GB", { timeZone: "UTC" }) + " UTC";
       } catch {
         return iso;
       }
+    }
+
+    function formatLocation(p) {
+      if (p.latitude == null || p.longitude == null) return "";
+      const lat = Number(p.latitude).toFixed(5);
+      const lon = Number(p.longitude).toFixed(5);
+      let s = lat + ", " + lon;
+      if (p.accuracy_m != null && !Number.isNaN(Number(p.accuracy_m))) {
+        s += " (±" + Math.round(Number(p.accuracy_m)) + " m)";
+      }
+      return s;
     }
 
     function extFromMime(mime) {
@@ -558,12 +575,13 @@
       const src = dataUrlForPhoto(p);
       const ts = p.timestamp || "";
       const mime = p.mime_type || "image/jpeg";
+      const locLine = formatLocation(p);
 
       const media = document.createElement("div");
       media.className = "card-media";
 
       const img = document.createElement("img");
-      img.alt = "وێنە " + (p.id || "");
+      img.alt = "Photo " + (p.id || "");
       img.decoding = "async";
       img.loading = "lazy";
       if ("fetchPriority" in img) img.fetchPriority = index < 2 ? "high" : "low";
@@ -573,7 +591,7 @@
       const dlBtn = document.createElement("button");
       dlBtn.type = "button";
       dlBtn.className = "card-download";
-      dlBtn.setAttribute("aria-label", "داگرتن");
+      dlBtn.setAttribute("aria-label", "Download");
       dlBtn.innerHTML =
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
       dlBtn.addEventListener("click", (e) => {
@@ -585,43 +603,37 @@
       media.appendChild(dlBtn);
 
       const cap = document.createElement("figcaption");
-      cap.textContent = formatTime(p.timestamp);
+      cap.appendChild(document.createTextNode(formatTime(p.timestamp)));
+      if (locLine) {
+        const loc = document.createElement("span");
+        loc.className = "loc";
+        loc.textContent = locLine;
+        cap.appendChild(loc);
+      }
 
       fig.appendChild(media);
       fig.appendChild(cap);
       return fig;
     }
 
-    async function loadPhotos() {
-      statusEl.textContent = "بارکردنی وێنەکان…";
-      statusEl.classList.remove("error");
+    function renderFolders(data) {
       foldersRoot.innerHTML = "";
-      let data;
-      try {
-        const res = await fetch(`${API_BASE}/photos`, { cache: "default" });
-        const text = await res.text();
-        try {
-          data = JSON.parse(text);
-        } catch {
-          throw new Error(text || "وەڵامێکی نادروست");
-        }
-        if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
-      } catch (e) {
-        statusEl.textContent = "نەتوانرا وێنەکان بباردرێن: " + (e.message || e) + " — API لە " + API_BASE + " بپشکنە";
-        statusEl.classList.add("error");
-        return;
-      }
-
       const folders = data.folders || [];
-      const total = folders.reduce((s, f) => s + (f.count || (f.photos && f.photos.length) || 0), 0);
+      const total = folders.reduce(
+        (s, f) => s + (f.count || (f.photos && f.photos.length) || 0),
+        0
+      );
       if (folders.length === 0 || total === 0) {
-        statusEl.textContent = "هێشتا وێنە نییە. لە پەڕەی سەرەکی وێنەیەک بگرە.";
-        foldersRoot.innerHTML = '<p class="empty">هیچ وێنەیەک لە کۆگا نییە.</p>';
+        statusEl.textContent = "No photos yet. Capture one from the home page.";
+        foldersRoot.innerHTML =
+          '<p class="empty">No images in storage.</p>';
         return;
       }
 
       statusEl.textContent =
-        total === 1 ? "یەک وێنە" : total + " وێنە · " + folders.length + " ڕۆژ";
+        total === 1
+          ? "1 photo"
+          : total + " photos · " + folders.length + " days";
 
       folders.forEach((folder, fi) => {
         const photos = folder.photos || [];
@@ -642,7 +654,7 @@
 
         const badge = document.createElement("span");
         badge.className = "folder-count";
-        badge.textContent = count === 1 ? "1 وێنە" : count + " وێنە";
+        badge.textContent = count === 1 ? "1 photo" : count + " photos";
 
         summary.appendChild(title);
         summary.appendChild(badge);
@@ -661,6 +673,94 @@
         foldersRoot.appendChild(details);
       });
     }
+
+    async function loadPhotos() {
+      statusEl.textContent = "Loading photos…";
+      statusEl.classList.remove("error");
+      foldersRoot.innerHTML = "";
+
+      let res;
+      try {
+        res = await fetch(`${API_BASE}/photos`, {
+          cache: "default",
+          headers: galleryHeaders(),
+        });
+      } catch (e) {
+        statusEl.textContent = "Network error: " + (e.message || e);
+        statusEl.classList.add("error");
+        return;
+      }
+
+      if (res.status === 401) {
+        authGate.classList.remove("hidden");
+        galleryRoot.hidden = true;
+        if (sessionStorage.getItem(STORAGE_KEY)) {
+          authError.classList.add("visible");
+        }
+        authPassword.value = "";
+        authPassword.focus();
+        return;
+      }
+
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        statusEl.textContent = "Invalid response from API at " + API_BASE;
+        statusEl.classList.add("error");
+        return;
+      }
+
+      if (!res.ok) {
+        statusEl.textContent =
+          "Could not load photos: " + (data.detail || data.message || "HTTP " + res.status);
+        statusEl.classList.add("error");
+        return;
+      }
+
+      authGate.classList.add("hidden");
+      galleryRoot.hidden = false;
+      renderFolders(data);
+    }
+
+    async function bootstrap() {
+      const saved = sessionStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        await loadPhotos();
+        return;
+      }
+      const probe = await fetch(`${API_BASE}/photos`, {
+        cache: "default",
+        headers: {},
+      });
+      if (probe.status === 401) {
+        authGate.classList.remove("hidden");
+        galleryRoot.hidden = true;
+        authPassword.focus();
+        return;
+      }
+      if (!probe.ok) {
+        const t = await probe.text();
+        let err;
+        try {
+          err = JSON.parse(t);
+        } catch {
+          err = {};
+        }
+        statusEl.textContent =
+          "Could not load photos: " + (err.detail || t || probe.status);
+        statusEl.classList.add("error");
+        galleryRoot.hidden = false;
+        return;
+      }
+      const data = await probe.json();
+      authGate.classList.add("hidden");
+      galleryRoot.hidden = false;
+      renderFolders(data);
+    }
+
+    bootstrap();
   </script>
 </body>
 </html>

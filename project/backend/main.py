@@ -8,13 +8,15 @@ from datetime import datetime, timezone
 
 from dotenv import load_dotenv
 from databases import Database
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import Depends, FastAPI, Header, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL", "")
+# If set, GET /photos requires header X-Gallery-Password with this value (set in Railway/hosting env).
+GALLERY_PASSWORD = (os.getenv("GALLERY_PASSWORD") or "").strip()
 database = Database(DATABASE_URL)
 
 
@@ -35,6 +37,21 @@ async def lifespan(app: FastAPI):
     await database.execute(
         """
         ALTER TABLE photos ADD COLUMN IF NOT EXISTS mime_type TEXT DEFAULT 'image/jpeg';
+        """
+    )
+    await database.execute(
+        """
+        ALTER TABLE photos ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION;
+        """
+    )
+    await database.execute(
+        """
+        ALTER TABLE photos ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION;
+        """
+    )
+    await database.execute(
+        """
+        ALTER TABLE photos ADD COLUMN IF NOT EXISTS accuracy_m DOUBLE PRECISION;
         """
     )
     yield
@@ -60,6 +77,31 @@ class UploadPhotoBody(BaseModel):
     mime_type: str | None = Field(
         None, description="MIME type of the image (e.g. image/webp)"
     )
+    latitude: float | None = Field(None, description="WGS84 latitude")
+    longitude: float | None = Field(None, description="WGS84 longitude")
+    accuracy_m: float | None = Field(None, description="Horizontal accuracy in meters")
+
+
+def validate_location(lat: float | None, lon: float | None, acc: float | None) -> None:
+    if lat is None and lon is None and acc is None:
+        return
+    if lat is None or lon is None:
+        raise HTTPException(
+            status_code=400, detail="latitude and longitude must both be set or both omitted"
+        )
+    if not (-90.0 <= lat <= 90.0) or not (-180.0 <= lon <= 180.0):
+        raise HTTPException(status_code=400, detail="Invalid coordinates")
+    if acc is not None and (acc < 0 or acc > 1_000_000):
+        raise HTTPException(status_code=400, detail="Invalid accuracy value")
+
+
+def require_gallery_password(
+    x_gallery_password: str | None = Header(None, alias="X-Gallery-Password"),
+) -> None:
+    if not GALLERY_PASSWORD:
+        return
+    if not x_gallery_password or x_gallery_password != GALLERY_PASSWORD:
+        raise HTTPException(status_code=401, detail="Invalid gallery password")
 
 
 def strip_data_url(b64: str) -> str:
@@ -134,16 +176,25 @@ async def upload_photo(body: UploadPhotoBody):
     raw = strip_data_url(body.image)
     raw = validate_base64(raw)
     mime = resolve_mime_type(raw, body.mime_type)
+    validate_location(body.latitude, body.longitude, body.accuracy_m)
 
     photo_id = uuid.uuid4()
     ts = datetime.now(timezone.utc)
 
     await database.execute(
         """
-        INSERT INTO photos (id, image, "timestamp", mime_type)
-        VALUES (:id, :image, :ts, :mime)
+        INSERT INTO photos (id, image, "timestamp", mime_type, latitude, longitude, accuracy_m)
+        VALUES (:id, :image, :ts, :mime, :lat, :lon, :acc)
         """,
-        {"id": photo_id, "image": raw, "ts": ts, "mime": mime},
+        {
+            "id": photo_id,
+            "image": raw,
+            "ts": ts,
+            "mime": mime,
+            "lat": body.latitude,
+            "lon": body.longitude,
+            "acc": body.accuracy_m,
+        },
     )
 
     return {
@@ -151,14 +202,20 @@ async def upload_photo(body: UploadPhotoBody):
         "image": raw,
         "mime_type": mime,
         "timestamp": ts.isoformat(),
+        "latitude": body.latitude,
+        "longitude": body.longitude,
+        "accuracy_m": body.accuracy_m,
     }
 
 
 @app.get("/photos")
-async def list_photos(response: Response):
+async def list_photos(
+    response: Response, _: None = Depends(require_gallery_password)
+):
     rows = await database.fetch_all(
         """
-        SELECT id, image, "timestamp" AS ts, mime_type
+        SELECT id, image, "timestamp" AS ts, mime_type,
+               latitude, longitude, accuracy_m
         FROM photos
         ORDER BY "timestamp" DESC
         """
@@ -174,11 +231,17 @@ async def list_photos(response: Response):
         mime = row["mime_type"] if row["mime_type"] else "image/jpeg"
         label, sort_key = utc_folder_label(ts)
         folder_meta[label] = sort_key
+        lat = row["latitude"]
+        lon = row["longitude"]
+        acc = row["accuracy_m"]
         photo = {
             "id": str(row["id"]),
             "image": row["image"],
             "mime_type": mime,
             "timestamp": ts_out,
+            "latitude": float(lat) if lat is not None else None,
+            "longitude": float(lon) if lon is not None else None,
+            "accuracy_m": float(acc) if acc is not None else None,
         }
         by_folder[label].append(photo)
 
